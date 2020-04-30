@@ -8,12 +8,9 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart' show required, visibleForTesting;
-import 'package:video_player_platform_interface/src/closed_caption_file.dart';
 
+import 'closed_caption_file.dart';
 import 'method_channel_video_player.dart';
-
-export 'package:video_player_platform_interface/src/closed_caption_file.dart';
-export 'package:video_player_platform_interface/src/sub_rip.dart';
 
 /// The interface that implementations of video_player must implement.
 ///

@@ -1,4 +1,4 @@
-package io.flutter.plugins.videoplayer;
+package com.jhomlala.better_player;
 
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_ALL;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;

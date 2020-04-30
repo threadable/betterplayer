@@ -1,4 +1,4 @@
-group 'io.flutter.plugins.videoplayer'
+group 'com.jhomlala.better_player'
 version '1.0-SNAPSHOT'
 
 buildscript {
