@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-import 'package:better_player/better_player.dart';
-import 'package:better_player/src/configuration/better_player_controller_event.dart';
-import 'package:better_player/src/controls/better_player_cupertino_controls.dart';
-import 'package:better_player/src/controls/better_player_material_controls.dart';
-import 'package:better_player/src/core/better_player_utils.dart';
-import 'package:better_player/src/subtitles/better_player_subtitles_drawer.dart';
-import 'package:better_player/src/video_player/video_player.dart';
+import 'package:threadable_better_player/threadable_better_player.dart';
+import 'package:threadable_better_player/src/configuration/better_player_controller_event.dart';
+import 'package:threadable_better_player/src/controls/better_player_cupertino_controls.dart';
+import 'package:threadable_better_player/src/controls/better_player_material_controls.dart';
+import 'package:threadable_better_player/src/core/better_player_utils.dart';
+import 'package:threadable_better_player/src/subtitles/better_player_subtitles_drawer.dart';
+import 'package:threadable_better_player/src/video_player/video_player.dart';
 import 'package:flutter/material.dart';
 
 class BetterPlayerWithControls extends StatefulWidget {

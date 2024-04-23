@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:better_player/better_player.dart';
-import 'package:better_player/src/subtitles/better_player_subtitle.dart';
+import 'package:threadable_better_player/threadable_better_player.dart';
+import 'package:threadable_better_player/src/subtitles/better_player_subtitle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 

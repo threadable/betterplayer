@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:better_player/better_player.dart';
-import 'package:better_player/src/video_player/video_player.dart';
-import 'package:better_player/src/video_player/video_player_platform_interface.dart';
+import 'package:threadable_better_player/threadable_better_player.dart';
+import 'package:threadable_better_player/src/video_player/video_player.dart';
+import 'package:threadable_better_player/src/video_player/video_player_platform_interface.dart';
 import 'package:flutter/material.dart';
 
 class BetterPlayerMaterialVideoProgressBar extends StatefulWidget {
