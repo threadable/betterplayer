@@ -19,7 +19,7 @@ import com.jhomlala.better_player.DataSourceUtils.getDataSourceFactory
 import io.flutter.plugin.common.EventChannel
 import io.flutter.view.TextureRegistry.SurfaceTextureEntry
 import io.flutter.plugin.common.MethodChannel
-import android.support.v4.media.session.MediaSessionCompat
+//import android.support.v4.media.session.MediaSessionCompat
 import androidx.work.WorkManager
 import androidx.work.WorkInfo
 import androidx.work.OneTimeWorkRequest
@@ -94,7 +94,7 @@ import kotlin.math.min
     private var refreshRunnable: Runnable? = null
     private var exoPlayerEventListener: Player.Listener? = null
     private var bitmap: Bitmap? = null
-    private var mediaSession: MediaSessionCompat? = null
+    private var mediaSession: MediaSession? = null
     private var drmSessionManager: DrmSessionManager? = null
     private val workManager: WorkManager
     private val workerObserverMap: HashMap<UUID, Observer<WorkInfo?>>
@@ -617,7 +617,7 @@ import kotlin.math.min
      * @return - configured MediaSession instance
      */
     @SuppressLint("InlinedApi")
-    fun setupMediaSession(context: Context?): MediaSessionCompat? {
+    fun setupMediaSession(context: Context?): MediaSession? {
         mediaSession?.release()
         context?.let {
 
@@ -627,13 +627,17 @@ import kotlin.math.min
                 0, mediaButtonIntent,
                 PendingIntent.FLAG_IMMUTABLE
             )
-            val mediaSession = MediaSessionCompat(context, TAG, null, pendingIntent)
-            mediaSession.setCallback(object : MediaSessionCompat.Callback() {
-                override fun onSeekTo(pos: Long) {
-                    sendSeekToEvent(pos)
-                    super.onSeekTo(pos)
-                }
-            })
+//            val mediaSession = MediaSessionCompat(context, TAG, null, pendingIntent)
+
+           val mediaSession = MediaSession.Builder(context, exoPlayer)
+//                .setSessionCallback(MySessionCallback())
+                .build()
+//            mediaSession.setCallback(object : MediaSession.Callback {
+//                override fun onSeekTo(pos: Long) {
+//                    sendSeekToEvent(pos)
+//                    super.onSeekTo(pos)
+//                }
+//            })
             mediaSession.isActive = true
 //            val mediaSessionConnector = MediaSessionConnector(mediaSession)
 //            mediaSessionConnector.setPlayer(exoPlayer)
