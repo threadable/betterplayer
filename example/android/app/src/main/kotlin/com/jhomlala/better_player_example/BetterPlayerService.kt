@@ -3,6 +3,7 @@ package com.jhomlala.better_player_example
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.annotation.RequiresApi
@@ -35,21 +36,26 @@ class BetterPlayerService : Service() {
                 PendingIntent.FLAG_IMMUTABLE
             )
 
-
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Better Player Notification")
             .setContentText("Better Player is running")
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(PRIORITY_MIN)
-            .setOngoing(true)
             .setContentIntent(pendingIntent)
 
+        // Set appropriate category for Android O and above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationBuilder.setCategory(Notification.CATEGORY_SERVICE);
+            notificationBuilder.setCategory(Notification.CATEGORY_SERVICE)
         }
-        startForeground(foregroundNotificationId, notificationBuilder.build())
+
+        // Choose the appropriate foreground service type based on your app's needs
+        val foregroundServiceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+
+        // Start the service in the foreground with the appropriate type
+        startForeground(foregroundNotificationId, notificationBuilder.build(), foregroundServiceType)
+
         return START_NOT_STICKY
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createNotificationChannel(channelId: String, channelName: String): String {
