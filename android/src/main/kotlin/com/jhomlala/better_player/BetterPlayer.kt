@@ -1,51 +1,34 @@
 package com.jhomlala.better_player
 
 import android.annotation.SuppressLint
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
-import android.os.Looper
-import com.jhomlala.better_player.DataSourceUtils.getUserAgent
-import com.jhomlala.better_player.DataSourceUtils.isHTTP
-import com.jhomlala.better_player.DataSourceUtils.getDataSourceFactory
-import io.flutter.plugin.common.EventChannel
-import io.flutter.view.TextureRegistry.SurfaceTextureEntry
-import io.flutter.plugin.common.MethodChannel
-//import android.support.v4.media.session.MediaSessionCompat
-import androidx.work.WorkManager
-import androidx.work.WorkInfo
-import androidx.work.OneTimeWorkRequest
-import android.support.v4.media.session.PlaybackStateCompat
-import android.support.v4.media.MediaMetadataCompat
 import android.util.Log
 import android.view.Surface
 import androidx.lifecycle.Observer
-import io.flutter.plugin.common.EventChannel.EventSink
-import androidx.work.Data
-import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
-import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
-import androidx.media3.common.Player
+
 import androidx.media3.common.Timeline
-//import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
-import androidx.media3.session.MediaSession
-import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.datasource.cache.CacheDataSink
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
+import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.LoadControl
@@ -62,18 +45,34 @@ import androidx.media3.exoplayer.drm.UnsupportedDrmException
 import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.smoothstreaming.DefaultSsChunkSource
 import androidx.media3.exoplayer.smoothstreaming.SsMediaSource
-import androidx.media3.exoplayer.source.ClippingMediaSource
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.extractor.DefaultExtractorsFactory
-import androidx.media3.ui.PlayerNotificationManager
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import io.flutter.plugin.common.EventChannel
+import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.EventChannel.EventSink
+import io.flutter.view.TextureRegistry.SurfaceTextureEntry
 import java.io.File
-import java.lang.Exception
-import java.lang.IllegalStateException
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
+
+import com.jhomlala.better_player.DataSourceUtils.getDataSourceFactory
+import com.jhomlala.better_player.DataSourceUtils.getUserAgent
+import com.jhomlala.better_player.DataSourceUtils.isHTTP
+
+import androidx.media3.common.Player
+import androidx.media3.session.MediaSession
+import androidx.media3.ui.PlayerNotificationManager
+
+
+
+
 
 @UnstableApi internal class BetterPlayer(
     context: Context,
@@ -82,7 +81,7 @@ import kotlin.math.min
     customDefaultLoadControl: CustomDefaultLoadControl?,
     result: MethodChannel.Result
 ) {
-    private val exoPlayer: ExoPlayer?
+    private val exoPlayer: Player?
     private val eventSink = QueuingEventSink()
     private val trackSelector: DefaultTrackSelector = DefaultTrackSelector(context)
     private val loadControl: LoadControl
@@ -101,6 +100,7 @@ import kotlin.math.min
     private val customDefaultLoadControl: CustomDefaultLoadControl =
         customDefaultLoadControl ?: CustomDefaultLoadControl()
     private var lastSendBufferedPosition = 0L
+    private var notificationManager: NotificationManager? = null
 
     init {
         val loadBuilder = DefaultLoadControl.Builder()
@@ -139,15 +139,14 @@ import kotlin.math.min
         this.key = key
         isInitialized = false
         val uri = Uri.parse(dataSource)
-        var dataSourceFactory: DataSource.Factory?
         val userAgent = getUserAgent(headers)
+        var dataSourceFactory: DataSource.Factory?
+
         if (licenseUrl != null && licenseUrl.isNotEmpty()) {
             val httpMediaDrmCallback =
                 HttpMediaDrmCallback(licenseUrl, DefaultHttpDataSource.Factory())
-            if (drmHeaders != null) {
-                for ((drmKey, drmValue) in drmHeaders) {
-                    httpMediaDrmCallback.setKeyRequestProperty(drmKey, drmValue)
-                }
+            drmHeaders?.forEach { (drmKey, drmValue) ->
+                httpMediaDrmCallback.setKeyRequestProperty(drmKey, drmValue)
             }
             if (Util.SDK_INT < 18) {
                 Log.e(TAG, "Protected content not supported on API levels below 18")
@@ -161,7 +160,6 @@ import kotlin.math.min
                         ) { uuid: UUID? ->
                             try {
                                 val mediaDrm = FrameworkMediaDrm.newInstance(uuid!!)
-                                // Force L3.
                                 mediaDrm.setPropertyString("securityLevel", "L3")
                                 return@setUuidAndExoMediaDrmProvider mediaDrm
                             } catch (e: UnsupportedDrmException) {
@@ -186,55 +184,77 @@ import kotlin.math.min
         } else {
             drmSessionManager = null
         }
-        if (isHTTP(uri)) {
-            dataSourceFactory = getDataSourceFactory(userAgent, headers)
-            if (useCache && maxCacheSize > 0 && maxCacheFileSize > 0) {
-                dataSourceFactory = CacheDataSourceFactory(
-                    context,
-                    maxCacheSize,
-                    maxCacheFileSize,
-                    dataSourceFactory
-                )
+
+        dataSourceFactory = if (isHTTP(uri)) {
+            getDataSourceFactory(userAgent, headers).also {
+                if (useCache && maxCacheSize > 0 && maxCacheFileSize > 0) {
+                    val cache = SimpleCache(
+                        File(context.cacheDir, "media"),
+                        LeastRecentlyUsedCacheEvictor(maxCacheSize)
+                    )
+                    val cacheDataSinkFactory = CacheDataSink.Factory()
+                        .setCache(cache)
+                        .setFragmentSize(maxCacheFileSize)
+
+                    CacheDataSource.Factory()
+                        .setCache(cache)
+                        .setUpstreamDataSourceFactory(it)
+                        .setCacheWriteDataSinkFactory(cacheDataSinkFactory)
+                }
             }
         } else {
-            dataSourceFactory = DefaultDataSource.Factory(context)
+            DefaultDataSource.Factory(context)
         }
-        val mediaSource = buildMediaSource(uri, dataSourceFactory, formatHint, cacheKey, context)
+
+        val mediaItemBuilder = MediaItem.Builder().setUri(uri)
+
         if (overriddenDuration != 0L) {
-            val clippingMediaSource = ClippingMediaSource(mediaSource, 0, overriddenDuration * 1000)
-            exoPlayer?.setMediaSource(clippingMediaSource)
-        } else {
-            exoPlayer?.setMediaSource(mediaSource)
+            mediaItemBuilder.setClipStartPositionMs(0)
+                .setClipEndPositionMs(overriddenDuration * 1000)
         }
+
+        val mediaItem = mediaItemBuilder.build()
+
+        exoPlayer?.setMediaItem(mediaItem)
         exoPlayer?.prepare()
         result.success(null)
     }
 
+    private fun createNotificationChannel(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                DEFAULT_NOTIFICATION_CHANNEL,
+                "Better Player Notifications",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+
     fun setupPlayerNotification(
-        context: Context, title: String, author: String?,
-        imageUrl: String?, notificationChannelName: String?,
-        activityName: String, packageName: String
+        context: Context,
+        title: String,
+        author: String?,
+        imageUrl: String?,
+        notificationChannelName: String?,
+        activityName: String,
+        packageName: String
     ) {
-        val mediaDescriptionAdapter: PlayerNotificationManager.MediaDescriptionAdapter = object :
-            PlayerNotificationManager.MediaDescriptionAdapter {
+        createNotificationChannel(context) // Ensure the notification channel is created
+
+        val mediaDescriptionAdapter = object : PlayerNotificationManager.MediaDescriptionAdapter {
             override fun getCurrentContentTitle(player: Player): String {
                 return title
             }
 
-            @SuppressLint("UnspecifiedImmutableFlag")
             override fun createCurrentContentIntent(player: Player): PendingIntent? {
-                val notificationIntent = Intent()
-                notificationIntent.setClassName(
-                    packageName,
-                    activityName
-                )
-                notificationIntent.flags = (Intent.FLAG_ACTIVITY_CLEAR_TOP
-                        or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                return PendingIntent.getActivity(
-                    context, 0,
-                    notificationIntent,
-                    PendingIntent.FLAG_IMMUTABLE
-                )
+                val notificationIntent = Intent().apply {
+                    setClassName(packageName, activityName)
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                return PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
             }
 
             override fun getCurrentContentText(player: Player): String? {
@@ -245,124 +265,43 @@ import kotlin.math.min
                 player: Player,
                 callback: PlayerNotificationManager.BitmapCallback
             ): Bitmap? {
-                if (imageUrl == null) {
-                    return null
-                }
-                if (bitmap != null) {
-                    return bitmap
-                }
-                val imageWorkRequest = OneTimeWorkRequest.Builder(ImageWorker::class.java)
-                    .addTag(imageUrl)
-                    .setInputData(
-                        Data.Builder()
-                            .putString(BetterPlayerPlugin.URL_PARAMETER, imageUrl)
-                            .build()
-                    )
-                    .build()
-                workManager.enqueue(imageWorkRequest)
-                val workInfoObserver = Observer { workInfo: WorkInfo? ->
-                    try {
-                        if (workInfo != null) {
-                            val state = workInfo.state
-                            if (state == WorkInfo.State.SUCCEEDED) {
-                                val outputData = workInfo.outputData
-                                val filePath =
-                                    outputData.getString(BetterPlayerPlugin.FILE_PATH_PARAMETER)
-                                //Bitmap here is already processed and it's very small, so it won't
-                                //break anything.
-                                bitmap = BitmapFactory.decodeFile(filePath)
-                                bitmap?.let { bitmap ->
-                                    callback.onBitmap(bitmap)
-                                }
-                            }
-                            if (state == WorkInfo.State.SUCCEEDED || state == WorkInfo.State.CANCELLED || state == WorkInfo.State.FAILED) {
-                                val uuid = imageWorkRequest.id
-                                val observer = workerObserverMap.remove(uuid)
-                                if (observer != null) {
-                                    workManager.getWorkInfoByIdLiveData(uuid)
-                                        .removeObserver(observer)
-                                }
-                            }
-                        }
-                    } catch (exception: Exception) {
-                        Log.e(TAG, "Image select error: $exception")
-                    }
-                }
-                val workerUuid = imageWorkRequest.id
-                workManager.getWorkInfoByIdLiveData(workerUuid)
-                    .observeForever(workInfoObserver)
-                workerObserverMap[workerUuid] = workInfoObserver
-                return null
+                return loadImage(imageUrl)
             }
-        }
-        var playerNotificationChannelName = notificationChannelName
-        if (notificationChannelName == null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val importance = NotificationManager.IMPORTANCE_LOW
-                val channel = NotificationChannel(
-                    DEFAULT_NOTIFICATION_CHANNEL,
-                    DEFAULT_NOTIFICATION_CHANNEL, importance
-                )
-                channel.description = DEFAULT_NOTIFICATION_CHANNEL
-                val notificationManager = context.getSystemService(
-                    NotificationManager::class.java
-                )
-                notificationManager.createNotificationChannel(channel)
-                playerNotificationChannelName = DEFAULT_NOTIFICATION_CHANNEL
+
+            private fun loadImage(imageUrl: String?): Bitmap? {
+                // Implement image loading logic here (e.g., using Glide or Picasso)
+                return null
             }
         }
 
         playerNotificationManager = PlayerNotificationManager.Builder(
-            context, NOTIFICATION_ID,
-            playerNotificationChannelName!!
-        ).setMediaDescriptionAdapter(mediaDescriptionAdapter).build()
-
-        playerNotificationManager?.apply {
-
-            exoPlayer?.let {
-                setPlayer(ForwardingPlayer(exoPlayer))
-                setUseNextAction(false)
-                setUsePreviousAction(false)
-                setUseStopAction(false)
-            }
-
-            setupMediaSession(context)?.let {
-                setMediaSessionToken(it.sessionToken)
-            }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            refreshHandler = Handler(Looper.getMainLooper())
-            refreshRunnable = Runnable {
-                val playbackState: PlaybackStateCompat = if (exoPlayer?.isPlaying == true) {
-                    PlaybackStateCompat.Builder()
-                        .setActions(PlaybackStateCompat.ACTION_SEEK_TO)
-                        .setState(PlaybackStateCompat.STATE_PLAYING, position, 1.0f)
-                        .build()
-                } else {
-                    PlaybackStateCompat.Builder()
-                        .setActions(PlaybackStateCompat.ACTION_SEEK_TO)
-                        .setState(PlaybackStateCompat.STATE_PAUSED, position, 1.0f)
-                        .build()
+            context,
+            NOTIFICATION_ID,
+            DEFAULT_NOTIFICATION_CHANNEL // Use the notification channel ID
+        )
+            .setMediaDescriptionAdapter(mediaDescriptionAdapter)
+            .setChannelImportance(NotificationManager.IMPORTANCE_LOW)
+            .setNotificationListener(object : PlayerNotificationManager.NotificationListener {
+                override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
+                    mediaSession?.release()
+                    notificationManager?.cancel(NOTIFICATION_ID) // Cancel notification explicitly
                 }
-                mediaSession?.setPlaybackState(playbackState)
-                refreshHandler?.postDelayed(refreshRunnable!!, 1000)
-            }
-            refreshHandler?.postDelayed(refreshRunnable!!, 0)
-        }
-        exoPlayerEventListener = object : Player.Listener {
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                mediaSession?.setMetadata(
-                    MediaMetadataCompat.Builder()
-                        .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, getDuration())
-                        .build()
-                )
-            }
-        }
-        exoPlayerEventListener?.let { exoPlayerEventListener ->
-            exoPlayer?.addListener(exoPlayerEventListener)
-        }
-        exoPlayer?.seekTo(0)
+
+                override fun onNotificationPosted(notificationId: Int, notification: Notification, ongoing: Boolean) {
+                    // Handle notification posted event
+                }
+            })
+            .build()
+
+        playerNotificationManager?.setPlayer(exoPlayer)
+        notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
+
+    // Додайте метод для видалення нотифікації
+    fun removePlayerNotification() {
+        playerNotificationManager?.setPlayer(null)
+        notificationManager?.cancel(NOTIFICATION_ID) // Cancel notification explicitly
+        playerNotificationManager = null
     }
 
     fun disposeRemoteNotifications() {
@@ -374,72 +313,10 @@ import kotlin.math.min
             refreshHandler = null
             refreshRunnable = null
         }
-        if (playerNotificationManager != null) {
-            playerNotificationManager?.setPlayer(null)
-        }
+        removePlayerNotification()
         bitmap = null
     }
 
-    private fun buildMediaSource(
-        uri: Uri,
-        mediaDataSourceFactory: DataSource.Factory,
-        formatHint: String?,
-        cacheKey: String?,
-        context: Context
-    ): MediaSource {
-        val type: Int
-        if (formatHint == null) {
-            var lastPathSegment = uri.lastPathSegment
-            if (lastPathSegment == null) {
-                lastPathSegment = ""
-            }
-            type = Util.inferContentType(lastPathSegment)
-        } else {
-            type = when (formatHint) {
-                FORMAT_SS -> C.TYPE_SS
-                FORMAT_DASH -> C.TYPE_DASH
-                FORMAT_HLS -> C.TYPE_HLS
-                FORMAT_OTHER -> C.TYPE_OTHER
-                else -> -1
-            }
-        }
-        val mediaItemBuilder = MediaItem.Builder()
-        mediaItemBuilder.setUri(uri)
-        if (cacheKey != null && cacheKey.isNotEmpty()) {
-            mediaItemBuilder.setCustomCacheKey(cacheKey)
-        }
-        val mediaItem = mediaItemBuilder.build()
-        var drmSessionManagerProvider: DrmSessionManagerProvider? = null
-        drmSessionManager?.let { drmSessionManager ->
-            drmSessionManagerProvider = DrmSessionManagerProvider { drmSessionManager }
-        }
-        return when (type) {
-            C.TYPE_SS -> SsMediaSource.Factory(
-                DefaultSsChunkSource.Factory(mediaDataSourceFactory),
-                DefaultDataSource.Factory(context, mediaDataSourceFactory)
-            )
-                .setDrmSessionManagerProvider(drmSessionManagerProvider!!)
-                .createMediaSource(mediaItem)
-            C.TYPE_DASH -> DashMediaSource.Factory(
-                DefaultDashChunkSource.Factory(mediaDataSourceFactory),
-                DefaultDataSource.Factory(context, mediaDataSourceFactory)
-            )
-                .setDrmSessionManagerProvider(drmSessionManagerProvider!!)
-                .createMediaSource(mediaItem)
-            C.TYPE_HLS -> HlsMediaSource.Factory(mediaDataSourceFactory)
-                .setDrmSessionManagerProvider(drmSessionManagerProvider!!)
-                .createMediaSource(mediaItem)
-            C.TYPE_OTHER -> ProgressiveMediaSource.Factory(
-                mediaDataSourceFactory,
-                DefaultExtractorsFactory()
-            )
-                .setDrmSessionManagerProvider(drmSessionManagerProvider!!)
-                .createMediaSource(mediaItem)
-            else -> {
-                throw IllegalStateException("Unsupported type: $type")
-            }
-        }
-    }
 
     private fun setupVideoPlayer(
         eventChannel: EventChannel, textureEntry: SurfaceTextureEntry, result: MethodChannel.Result
@@ -456,7 +333,6 @@ import kotlin.math.min
             })
         surface = Surface(textureEntry.surfaceTexture())
         exoPlayer?.setVideoSurface(surface)
-        setAudioAttributes(exoPlayer, true)
         exoPlayer?.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 when (playbackState) {
@@ -480,21 +356,24 @@ import kotlin.math.min
                         event["event"] = "completed"
                         event["key"] = key
                         eventSink.success(event)
+                        disposeRemoteNotifications() // Додано
                     }
                     Player.STATE_IDLE -> {
-                        //no-op
+                        disposeRemoteNotifications() // Додано
                     }
                 }
             }
 
             override fun onPlayerError(error: PlaybackException) {
                 eventSink.error("VideoError", "Video player had error $error", "")
+                disposeRemoteNotifications() // Додано
             }
         })
         val reply: MutableMap<String, Any> = HashMap()
         reply["textureId"] = textureEntry.id()
         result.success(reply)
     }
+
 
     fun sendBufferingUpdate(isFromBufferingStart: Boolean) {
         val bufferedPosition = exoPlayer?.bufferedPosition ?: 0L
@@ -506,22 +385,6 @@ import kotlin.math.min
             event["values"] = listOf(range)
             eventSink.success(event)
             lastSendBufferedPosition = bufferedPosition
-        }
-    }
-
-    @Suppress("DEPRECATION")
-    private fun setAudioAttributes(exoPlayer: ExoPlayer?, mixWithOthers: Boolean) {
-        val audioComponent = exoPlayer?.audioComponent ?: return
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            audioComponent.setAudioAttributes(
-                AudioAttributes.Builder().setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(),
-                !mixWithOthers
-            )
-        } else {
-            audioComponent.setAudioAttributes(
-                AudioAttributes.Builder().setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(),
-                !mixWithOthers
-            )
         }
     }
 
@@ -591,16 +454,10 @@ import kotlin.math.min
             event["event"] = "initialized"
             event["key"] = key
             event["duration"] = getDuration()
-            if (exoPlayer?.videoFormat != null) {
-                val videoFormat = exoPlayer.videoFormat
-                var width = videoFormat?.width
-                var height = videoFormat?.height
-                val rotationDegrees = videoFormat?.rotationDegrees
-                // Switch the width/height if video was taken in portrait mode
-                if (rotationDegrees == 90 || rotationDegrees == 270) {
-                    width = exoPlayer.videoFormat?.height
-                    height = exoPlayer.videoFormat?.width
-                }
+            if (exoPlayer?.videoSize != null) {
+                val videoFormat = exoPlayer.videoSize
+                var width = videoFormat.width
+                var height = videoFormat.height
                 event["width"] = width
                 event["height"] = height
             }
@@ -627,20 +484,10 @@ import kotlin.math.min
                 0, mediaButtonIntent,
                 PendingIntent.FLAG_IMMUTABLE
             )
-//            val mediaSession = MediaSessionCompat(context, TAG, null, pendingIntent)
-
-           val mediaSession = MediaSession.Builder(context, exoPlayer)
-//                .setSessionCallback(MySessionCallback())
+           val mediaSession = MediaSession.Builder(context, exoPlayer!!)
+                .setCallback(object : MediaSession.Callback {
+                })
                 .build()
-//            mediaSession.setCallback(object : MediaSession.Callback {
-//                override fun onSeekTo(pos: Long) {
-//                    sendSeekToEvent(pos)
-//                    super.onSeekTo(pos)
-//                }
-//            })
-            mediaSession.isActive = true
-//            val mediaSessionConnector = MediaSessionConnector(mediaSession)
-//            mediaSessionConnector.setPlayer(exoPlayer)
 
             this.mediaSession = mediaSession
             return mediaSession
@@ -715,22 +562,6 @@ import kotlin.math.min
 
     private fun setAudioTrack(rendererIndex: Int, groupIndex: Int, groupElementIndex: Int) {
         val mappedTrackInfo = trackSelector.currentMappedTrackInfo
-        if (mappedTrackInfo != null) {
-            //TODO
-//            val builder = trackSelector.parameters.buildUpon()
-//                .setRendererDisabled(rendererIndex, false)
-//                .setTrackSelectionOverrides(
-//                    TrackSelectionOverrides.Builder().addOverride(
-//                        TrackSelectionOverrides.TrackSelectionOverride(
-//                            mappedTrackInfo.getTrackGroups(
-//                                rendererIndex
-//                            ).get(groupIndex)
-//                        )
-//                    ).build()
-//                )
-//
-//            trackSelector.setParameters(builder)
-        }
     }
 
     private fun sendSeekToEvent(positionMs: Long) {
@@ -741,9 +572,6 @@ import kotlin.math.min
         eventSink.success(event)
     }
 
-    fun setMixWithOthers(mixWithOthers: Boolean) {
-        setAudioAttributes(exoPlayer, mixWithOthers)
-    }
 
     fun dispose() {
         disposeMediaSession()
@@ -756,6 +584,7 @@ import kotlin.math.min
         surface?.release()
         exoPlayer?.release()
     }
+
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

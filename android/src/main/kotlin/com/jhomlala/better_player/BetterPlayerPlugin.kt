@@ -4,6 +4,8 @@
 package com.jhomlala.better_player
 
 import android.app.Activity
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.PictureInPictureParams
 import android.content.Context
 import android.content.pm.PackageManager
@@ -12,6 +14,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.util.LongSparseArray
+import androidx.media3.common.util.UnstableApi
 import com.jhomlala.better_player.BetterPlayerCache.releaseCache
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -30,6 +33,7 @@ import java.util.HashMap
 /**
  * Android platform implementation of the VideoPlayerPlugin.
  */
+@UnstableApi
 class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private val videoPlayers = LongSparseArray<BetterPlayer>()
     private val dataSources = LongSparseArray<Map<String, Any?>>()
@@ -39,6 +43,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private var activity: Activity? = null
     private var pipHandler: Handler? = null
     private var pipRunnable: Runnable? = null
+
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         val loader = FlutterLoader()
         flutterState = FlutterState(
@@ -212,9 +217,9 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 val mixWitOthers = call.argument<Boolean?>(
                     MIX_WITH_OTHERS_PARAMETER
                 )
-                if (mixWitOthers != null) {
-                    player.setMixWithOthers(mixWitOthers)
-                }
+//                if (mixWitOthers != null) {
+//                    player.setMixWithOthers(mixWitOthers)
+//                }
             }
             DISPOSE_METHOD -> {
                 dispose(player, textureId)
