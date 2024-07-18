@@ -274,7 +274,7 @@ import androidx.media3.ui.PlayerNotificationManager
             }
         }
 
-        playerNotificationManager = PlayerNotificationManager.Builder(
+        val playerNotificationManager = PlayerNotificationManager.Builder(
             context,
             NOTIFICATION_ID,
             DEFAULT_NOTIFICATION_CHANNEL // Use the notification channel ID
@@ -293,7 +293,15 @@ import androidx.media3.ui.PlayerNotificationManager
             })
             .build()
 
-        playerNotificationManager?.setPlayer(exoPlayer)
+        // Enable only the play/pause action
+        playerNotificationManager.setUsePlayPauseActions(true)
+        playerNotificationManager.setUseRewindAction(false)
+        playerNotificationManager.setUseFastForwardAction(false)
+        playerNotificationManager.setUsePreviousAction(false)
+        playerNotificationManager.setUseNextAction(false)
+        playerNotificationManager.setUseStopAction(false)
+
+        playerNotificationManager.setPlayer(exoPlayer)
         notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
 
