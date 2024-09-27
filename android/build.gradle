@@ -30,6 +30,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
+    namespace "com.jhomlala.better_player"
     compileSdk 34
     defaultConfig {
         multiDexEnabled true
