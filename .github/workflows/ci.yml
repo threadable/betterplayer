@@ -9,18 +9,20 @@ jobs:
   check-format:
       name: Check format using flutter format
       runs-on: ubuntu-latest
-      container: cirrusci/flutter:stable
+      container:
+        image: ghcr.io/cirruslabs/flutter:latest
 
       steps:
         - name: Checkout code
           uses: actions/checkout@v2
         - name: Check format
-          run: flutter format -n --set-exit-if-changed .
+          run: dart format -n --set-exit-if-changed .
 
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    container: cirrusci/flutter:stable
+    container:
+      image: ghcr.io/cirruslabs/flutter:latest
 
     steps:
       - name: Checkout code
@@ -34,7 +36,8 @@ jobs:
 #  test:
 #    name: Test
 #    runs-on: ubuntu-latest
-#    container: cirrusci/flutter:stable
+#    container:
+#      image: ghcr.io/cirruslabs/flutter:latest
 #
 #    steps:
 #      - name: Checkout code
