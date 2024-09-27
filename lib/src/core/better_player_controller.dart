@@ -468,7 +468,8 @@ class BetterPlayerController {
           drmHeaders: _betterPlayerDataSource?.drmConfiguration?.headers,
           activityName:
               _betterPlayerDataSource?.notificationConfiguration?.activityName,
-          packageName: _betterPlayerDataSource?.notificationConfiguration?.packageName,
+          packageName:
+              _betterPlayerDataSource?.notificationConfiguration?.packageName,
           clearKey: _betterPlayerDataSource?.drmConfiguration?.clearKey,
           videoExtension: _betterPlayerDataSource!.videoExtension,
         );
@@ -496,8 +497,8 @@ class BetterPlayerController {
             overriddenDuration: _betterPlayerDataSource!.overriddenDuration,
             activityName: _betterPlayerDataSource
                 ?.notificationConfiguration?.activityName,
-            packageName: _betterPlayerDataSource
-                ?.notificationConfiguration?.packageName,
+            packageName:
+                _betterPlayerDataSource?.notificationConfiguration?.packageName,
             clearKey: _betterPlayerDataSource?.drmConfiguration?.clearKey);
         break;
       case BetterPlayerDataSourceType.memory:
