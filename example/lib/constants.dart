@@ -20,7 +20,7 @@ class Constants {
     "LARGE":
         "https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_1280_10MG.mp4",
     "EXTRA_LARGE":
-        "https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_1920_18MG.mp4"
+        "https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_1920_18MG.mp4",
   };
   static const String phantomVideoUrl =
       "http://sample.vodobox.com/skate_phantom_flex_4k/skate_phantom_flex_4k.m3u8";

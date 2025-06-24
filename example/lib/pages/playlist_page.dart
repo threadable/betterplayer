@@ -37,25 +37,21 @@ class _PlaylistPageState extends State<PlaylistPage> {
   Future<List<BetterPlayerDataSource>> setupData() async {
     _dataSourceList.add(
       BetterPlayerDataSource(
-          BetterPlayerDataSourceType.network, Constants.forBiggerBlazesUrl,
-          subtitles: BetterPlayerSubtitlesSource.single(
-            type: BetterPlayerSubtitlesSourceType.file,
-            url: await Utils.getFileUrl(Constants.fileExampleSubtitlesUrl),
-          ),
-          placeholder: Image.network(
-            Constants.catImageUrl,
-            fit: BoxFit.cover,
-          )),
+        BetterPlayerDataSourceType.network,
+        Constants.forBiggerBlazesUrl,
+        subtitles: BetterPlayerSubtitlesSource.single(
+          type: BetterPlayerSubtitlesSourceType.file,
+          url: await Utils.getFileUrl(Constants.fileExampleSubtitlesUrl),
+        ),
+        placeholder: Image.network(Constants.catImageUrl, fit: BoxFit.cover),
+      ),
     );
 
     _dataSourceList.add(
       BetterPlayerDataSource(
         BetterPlayerDataSourceType.network,
         Constants.bugBuckBunnyVideoUrl,
-        placeholder: Image.network(
-          Constants.catImageUrl,
-          fit: BoxFit.cover,
-        ),
+        placeholder: Image.network(Constants.catImageUrl, fit: BoxFit.cover),
       ),
     );
     _dataSourceList.add(
@@ -71,76 +67,82 @@ class _PlaylistPageState extends State<PlaylistPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Playlist"),
-      ),
+      appBar: AppBar(title: Text("Playlist")),
       body: FutureBuilder<List<BetterPlayerDataSource>>(
         future: setupData(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return Text("Building!");
           } else {
-            return ListView(children: [
-              Padding(
-                padding: EdgeInsets.all(8),
-                child: Text(
+            return ListView(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Text(
                     "Playlist widget will load automatically next video once current "
-                    "finishes. User can't use player controls when video is changing."),
-              ),
-              AspectRatio(
-                child: BetterPlayerPlaylist(
-                  key: _betterPlayerPlaylistStateKey,
-                  betterPlayerConfiguration: _betterPlayerConfiguration,
-                  betterPlayerPlaylistConfiguration:
-                      _betterPlayerPlaylistConfiguration,
-                  betterPlayerDataSourceList: snapshot.data!,
+                    "finishes. User can't use player controls when video is changing.",
+                  ),
                 ),
-                aspectRatio: 1,
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _betterPlayerPlaylistController!.setupDataSource(0);
-                },
-                child: Text("Change to first data source"),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _betterPlayerPlaylistController!.setupDataSource(2);
-                },
-                child: Text("Change to last source"),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  print("Currently playing video: " +
-                      _betterPlayerPlaylistController!.currentDataSourceIndex
-                          .toString());
-                },
-                child: Text("Check currently playing video index"),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _betterPlayerPlaylistController!.betterPlayerController!
-                      .pause();
-                },
-                child: Text("Pause current video with BetterPlayerController"),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  var list = [
-                    BetterPlayerDataSource(
-                      BetterPlayerDataSourceType.network,
-                      Constants.bugBuckBunnyVideoUrl,
-                      placeholder: Image.network(
-                        Constants.catImageUrl,
-                        fit: BoxFit.cover,
+                AspectRatio(
+                  child: BetterPlayerPlaylist(
+                    key: _betterPlayerPlaylistStateKey,
+                    betterPlayerConfiguration: _betterPlayerConfiguration,
+                    betterPlayerPlaylistConfiguration:
+                        _betterPlayerPlaylistConfiguration,
+                    betterPlayerDataSourceList: snapshot.data!,
+                  ),
+                  aspectRatio: 1,
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    _betterPlayerPlaylistController!.setupDataSource(0);
+                  },
+                  child: Text("Change to first data source"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    _betterPlayerPlaylistController!.setupDataSource(2);
+                  },
+                  child: Text("Change to last source"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    print(
+                      "Currently playing video: " +
+                          _betterPlayerPlaylistController!
+                              .currentDataSourceIndex
+                              .toString(),
+                    );
+                  },
+                  child: Text("Check currently playing video index"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    _betterPlayerPlaylistController!.betterPlayerController!
+                        .pause();
+                  },
+                  child: Text(
+                    "Pause current video with BetterPlayerController",
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    var list = [
+                      BetterPlayerDataSource(
+                        BetterPlayerDataSourceType.network,
+                        Constants.bugBuckBunnyVideoUrl,
+                        placeholder: Image.network(
+                          Constants.catImageUrl,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                    )
-                  ];
-                  _betterPlayerPlaylistController?.setupDataSourceList(list);
-                },
-                child: Text("Setup new data source list"),
-              ),
-            ]);
+                    ];
+                    _betterPlayerPlaylistController?.setupDataSourceList(list);
+                  },
+                  child: Text("Setup new data source list"),
+                ),
+              ],
+            );
           }
         },
       ),
@@ -149,5 +151,6 @@ class _PlaylistPageState extends State<PlaylistPage> {
 
   BetterPlayerPlaylistController? get _betterPlayerPlaylistController =>
       _betterPlayerPlaylistStateKey
-          .currentState!.betterPlayerPlaylistController;
+          .currentState!
+          .betterPlayerPlaylistController;
 }

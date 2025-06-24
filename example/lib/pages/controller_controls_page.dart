@@ -13,12 +13,11 @@ class _ControllerControlsPageState extends State<ControllerControlsPage> {
   @override
   void initState() {
     BetterPlayerConfiguration betterPlayerConfiguration =
-        BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
-      fit: BoxFit.contain,
-    );
+        BetterPlayerConfiguration(aspectRatio: 16 / 9, fit: BoxFit.contain);
     BetterPlayerDataSource dataSource = BetterPlayerDataSource(
-        BetterPlayerDataSourceType.network, Constants.elephantDreamVideoUrl);
+      BetterPlayerDataSourceType.network,
+      Constants.elephantDreamVideoUrl,
+    );
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _betterPlayerController.setupDataSource(dataSource);
     super.initState();
@@ -27,9 +26,7 @@ class _ControllerControlsPageState extends State<ControllerControlsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Controller controls"),
-      ),
+      appBar: AppBar(title: Text("Controller controls")),
       body: Column(
         children: [
           const SizedBox(height: 8),
@@ -48,10 +45,13 @@ class _ControllerControlsPageState extends State<ControllerControlsPage> {
           Wrap(
             children: [
               TextButton(
-                  child: Text("Play"), onPressed: _betterPlayerController.play),
+                child: Text("Play"),
+                onPressed: _betterPlayerController.play,
+              ),
               TextButton(
-                  child: Text("Pause"),
-                  onPressed: _betterPlayerController.pause),
+                child: Text("Pause"),
+                onPressed: _betterPlayerController.pause,
+              ),
               TextButton(
                 child: Text("Hide controls"),
                 onPressed: () {
@@ -65,7 +65,7 @@ class _ControllerControlsPageState extends State<ControllerControlsPage> {
                 },
               ),
             ],
-          )
+          ),
         ],
       ),
     );

@@ -18,12 +18,11 @@ class _EventListenerPageState extends State<EventListenerPage> {
   @override
   void initState() {
     BetterPlayerConfiguration betterPlayerConfiguration =
-        BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
-      fit: BoxFit.contain,
-    );
+        BetterPlayerConfiguration(aspectRatio: 16 / 9, fit: BoxFit.contain);
     BetterPlayerDataSource dataSource = BetterPlayerDataSource(
-        BetterPlayerDataSourceType.network, Constants.elephantDreamVideoUrl);
+      BetterPlayerDataSourceType.network,
+      Constants.elephantDreamVideoUrl,
+    );
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _betterPlayerController.setupDataSource(dataSource);
     _betterPlayerController.addEventsListener(_handleEvent);
@@ -47,9 +46,7 @@ class _EventListenerPageState extends State<EventListenerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Event listener"),
-      ),
+      appBar: AppBar(title: Text("Event listener")),
       body: Column(
         children: [
           const SizedBox(height: 8),
@@ -77,8 +74,10 @@ class _EventListenerPageState extends State<EventListenerPage> {
                         (event) => Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("Event: ${event.betterPlayerEventType} "
-                                "parameters: ${(event.parameters ?? <String, dynamic>{}).toString()}"),
+                            Text(
+                              "Event: ${event.betterPlayerEventType} "
+                              "parameters: ${(event.parameters ?? <String, dynamic>{}).toString()}",
+                            ),
                             Divider(),
                           ],
                         ),
@@ -87,7 +86,7 @@ class _EventListenerPageState extends State<EventListenerPage> {
                 );
               },
             ),
-          )
+          ),
         ],
       ),
     );

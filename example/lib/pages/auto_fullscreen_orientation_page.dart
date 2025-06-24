@@ -16,11 +16,14 @@ class _AutoFullscreenOrientationPageState
   void initState() {
     BetterPlayerConfiguration betterPlayerConfiguration =
         BetterPlayerConfiguration(
-            aspectRatio: 16 / 9,
-            fit: BoxFit.contain,
-            autoDetectFullscreenDeviceOrientation: true);
+          aspectRatio: 16 / 9,
+          fit: BoxFit.contain,
+          autoDetectFullscreenDeviceOrientation: true,
+        );
     BetterPlayerDataSource dataSource = BetterPlayerDataSource(
-        BetterPlayerDataSourceType.network, Constants.forBiggerBlazesUrl);
+      BetterPlayerDataSourceType.network,
+      Constants.forBiggerBlazesUrl,
+    );
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _betterPlayerController.setupDataSource(dataSource);
     super.initState();
@@ -29,9 +32,7 @@ class _AutoFullscreenOrientationPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Auto full screen orientation"),
-      ),
+      appBar: AppBar(title: Text("Auto full screen orientation")),
       body: Column(
         children: [
           const SizedBox(height: 8),
@@ -51,8 +52,9 @@ class _AutoFullscreenOrientationPageState
             child: Text("Play horizontal video"),
             onPressed: () {
               BetterPlayerDataSource dataSource = BetterPlayerDataSource(
-                  BetterPlayerDataSourceType.network,
-                  Constants.forBiggerBlazesUrl);
+                BetterPlayerDataSourceType.network,
+                Constants.forBiggerBlazesUrl,
+              );
               _betterPlayerController.setupDataSource(dataSource);
             },
           ),
@@ -60,8 +62,9 @@ class _AutoFullscreenOrientationPageState
             child: Text("Play vertical video"),
             onPressed: () async {
               BetterPlayerDataSource dataSource = BetterPlayerDataSource(
-                  BetterPlayerDataSourceType.network,
-                  Constants.verticalVideoUrl);
+                BetterPlayerDataSourceType.network,
+                Constants.verticalVideoUrl,
+              );
               _betterPlayerController.setupDataSource(dataSource);
             },
           ),

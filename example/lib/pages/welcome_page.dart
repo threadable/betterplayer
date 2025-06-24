@@ -51,25 +51,19 @@ class _WelcomePageState extends State<WelcomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Better Player Example"),
-      ),
+      appBar: AppBar(title: Text("Better Player Example")),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: ListView(
           children: [
             const SizedBox(height: 8),
-            Image.asset(
-              "assets/logo.png",
-              height: 200,
-              width: 200,
-            ),
+            Image.asset("assets/logo.png", height: 200, width: 200),
             Text(
               "Welcome to Better Player example app. Click on any element below to see example.",
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 8),
-            ...buildExampleElementWidgets()
+            ...buildExampleElementWidgets(),
           ],
         ),
       ),
@@ -174,10 +168,7 @@ class _WelcomePageState extends State<WelcomePage> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                name,
-                style: TextStyle(fontSize: 16),
-              ),
+              child: Text(name, style: TextStyle(fontSize: 16)),
             ),
             Divider(),
           ],
@@ -195,8 +186,9 @@ class _WelcomePageState extends State<WelcomePage> {
 
   ///Save subtitles to file, so we can use it later
   Future _saveAssetSubtitleToFile() async {
-    String content =
-        await rootBundle.loadString("assets/example_subtitles.srt");
+    String content = await rootBundle.loadString(
+      "assets/example_subtitles.srt",
+    );
     final directory = await getApplicationDocumentsDirectory();
     var file = File("${directory.path}/example_subtitles.srt");
     file.writeAsString(content);
@@ -211,8 +203,9 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 
   Future _saveAssetEncryptVideoToFile() async {
-    var content =
-        await rootBundle.load("assets/${Constants.fileTestVideoEncryptUrl}");
+    var content = await rootBundle.load(
+      "assets/${Constants.fileTestVideoEncryptUrl}",
+    );
     final directory = await getApplicationDocumentsDirectory();
     var file = File("${directory.path}/${Constants.fileTestVideoEncryptUrl}");
     file.writeAsBytesSync(content.buffer.asUint8List());

@@ -14,10 +14,10 @@ class _NotificationPlayerPageState extends State<NotificationPlayerPage> {
   void initState() {
     BetterPlayerConfiguration betterPlayerConfiguration =
         BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
-      fit: BoxFit.contain,
-      handleLifecycle: true,
-    );
+          aspectRatio: 16 / 9,
+          fit: BoxFit.contain,
+          handleLifecycle: true,
+        );
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _setupDataSource();
     super.initState();
@@ -41,9 +41,7 @@ class _NotificationPlayerPageState extends State<NotificationPlayerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Notification player"),
-      ),
+      appBar: AppBar(title: Text("Notification player")),
       body: Column(
         children: [
           const SizedBox(height: 8),

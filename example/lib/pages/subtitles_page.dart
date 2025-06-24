@@ -15,21 +15,23 @@ class _SubtitlesPageState extends State<SubtitlesPage> {
   void initState() {
     BetterPlayerConfiguration betterPlayerConfiguration =
         BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
-      fit: BoxFit.contain,
-      subtitlesConfiguration: BetterPlayerSubtitlesConfiguration(
-        backgroundColor: Colors.green,
-        fontColor: Colors.white,
-        outlineColor: Colors.black,
-        fontSize: 20,
-      ),
-    );
+          aspectRatio: 16 / 9,
+          fit: BoxFit.contain,
+          subtitlesConfiguration: BetterPlayerSubtitlesConfiguration(
+            backgroundColor: Colors.green,
+            fontColor: Colors.white,
+            outlineColor: Colors.black,
+            fontSize: 20,
+          ),
+        );
 
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _betterPlayerController.addEventsListener((event) {
       if (event.betterPlayerEventType == BetterPlayerEventType.progress) {
-        print("Current subtitle line: " +
-            _betterPlayerController.renderedSubtitle.toString());
+        print(
+          "Current subtitle line: " +
+              _betterPlayerController.renderedSubtitle.toString(),
+        );
       }
     });
     _setupDataSource();
@@ -53,24 +55,24 @@ class _SubtitlesPageState extends State<SubtitlesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Subtitles"),
-      ),
-      body: Column(children: [
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            "Player with subtitles loaded from file. Subtitles are enabled by default."
-            " You can choose subtitles by using overflow menu (3 dots in right corner).",
-            style: TextStyle(fontSize: 16),
+      appBar: AppBar(title: Text("Subtitles")),
+      body: Column(
+        children: [
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              "Player with subtitles loaded from file. Subtitles are enabled by default."
+              " You can choose subtitles by using overflow menu (3 dots in right corner).",
+              style: TextStyle(fontSize: 16),
+            ),
           ),
-        ),
-        AspectRatio(
-          aspectRatio: 16 / 9,
-          child: BetterPlayer(controller: _betterPlayerController),
-        )
-      ]),
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: BetterPlayer(controller: _betterPlayerController),
+          ),
+        ],
+      ),
     );
   }
 }

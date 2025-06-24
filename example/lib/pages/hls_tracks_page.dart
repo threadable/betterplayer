@@ -13,10 +13,7 @@ class _HlsTracksPageState extends State<HlsTracksPage> {
   @override
   void initState() {
     BetterPlayerConfiguration betterPlayerConfiguration =
-        BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
-      fit: BoxFit.contain,
-    );
+        BetterPlayerConfiguration(aspectRatio: 16 / 9, fit: BoxFit.contain);
     BetterPlayerDataSource dataSource = BetterPlayerDataSource(
       BetterPlayerDataSourceType.network,
       Constants.hlsTestStreamUrl,
@@ -30,9 +27,7 @@ class _HlsTracksPageState extends State<HlsTracksPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("HLS tracks"),
-      ),
+      appBar: AppBar(title: Text("HLS tracks")),
       body: Column(
         children: [
           const SizedBox(height: 8),

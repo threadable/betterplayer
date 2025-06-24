@@ -13,13 +13,13 @@ class _DashPageState extends State<DashPage> {
   @override
   void initState() {
     BetterPlayerConfiguration betterPlayerConfiguration =
-        BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
-      fit: BoxFit.contain,
-    );
+        BetterPlayerConfiguration(aspectRatio: 16 / 9, fit: BoxFit.contain);
     BetterPlayerDataSource dataSource = BetterPlayerDataSource(
-        BetterPlayerDataSourceType.network, Constants.dashStreamUrl,
-        useAsmsSubtitles: true, useAsmsTracks: true);
+      BetterPlayerDataSourceType.network,
+      Constants.dashStreamUrl,
+      useAsmsSubtitles: true,
+      useAsmsTracks: true,
+    );
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _betterPlayerController.setupDataSource(dataSource);
     super.initState();
@@ -28,9 +28,7 @@ class _DashPageState extends State<DashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Dash page"),
-      ),
+      appBar: AppBar(title: Text("Dash page")),
       body: Column(
         children: [
           const SizedBox(height: 8),

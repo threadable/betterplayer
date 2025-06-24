@@ -14,10 +14,10 @@ class _OverriddenDurationPageState extends State<OverriddenDurationPage> {
   void initState() {
     BetterPlayerConfiguration betterPlayerConfiguration =
         BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
-      fit: BoxFit.contain,
-      handleLifecycle: true,
-    );
+          aspectRatio: 16 / 9,
+          fit: BoxFit.contain,
+          handleLifecycle: true,
+        );
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _setupDataSource();
     super.initState();
@@ -37,9 +37,7 @@ class _OverriddenDurationPageState extends State<OverriddenDurationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Overridden duration"),
-      ),
+      appBar: AppBar(title: Text("Overridden duration")),
       body: Column(
         children: [
           const SizedBox(height: 8),

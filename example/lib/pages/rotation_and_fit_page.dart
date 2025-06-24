@@ -14,12 +14,14 @@ class _RotationAndFitPageState extends State<RotationAndFitPage> {
   void initState() {
     BetterPlayerConfiguration betterPlayerConfiguration =
         BetterPlayerConfiguration(
-      aspectRatio: 1.0,
-      fit: BoxFit.fill,
-      rotation: 90,
-    );
+          aspectRatio: 1.0,
+          fit: BoxFit.fill,
+          rotation: 90,
+        );
     BetterPlayerDataSource dataSource = BetterPlayerDataSource(
-        BetterPlayerDataSourceType.network, Constants.forBiggerBlazesUrl);
+      BetterPlayerDataSourceType.network,
+      Constants.forBiggerBlazesUrl,
+    );
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _betterPlayerController.setupDataSource(dataSource);
     super.initState();
@@ -28,9 +30,7 @@ class _RotationAndFitPageState extends State<RotationAndFitPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Rotation and fit"),
-      ),
+      appBar: AppBar(title: Text("Rotation and fit")),
       body: Column(
         children: [
           const SizedBox(height: 8),

@@ -15,27 +15,30 @@ class _ControlsConfigurationPageState extends State<ControlsConfigurationPage> {
   void initState() {
     BetterPlayerControlsConfiguration controlsConfiguration =
         BetterPlayerControlsConfiguration(
-      controlBarColor: Colors.indigoAccent.withAlpha(200),
-      iconsColor: Colors.lightGreen,
-      playIcon: Icons.forward,
-      progressBarPlayedColor: Colors.grey,
-      progressBarHandleColor: Colors.lightGreen,
-      enableSkips: false,
-      enableFullscreen: false,
-      controlBarHeight: 60,
-      loadingColor: Colors.red,
-      overflowModalColor: Colors.indigo,
-      overflowModalTextColor: Colors.white,
-      overflowMenuIconsColor: Colors.white,
-    );
+          controlBarColor: Colors.indigoAccent.withAlpha(200),
+          iconsColor: Colors.lightGreen,
+          playIcon: Icons.forward,
+          progressBarPlayedColor: Colors.grey,
+          progressBarHandleColor: Colors.lightGreen,
+          enableSkips: false,
+          enableFullscreen: false,
+          controlBarHeight: 60,
+          loadingColor: Colors.red,
+          overflowModalColor: Colors.indigo,
+          overflowModalTextColor: Colors.white,
+          overflowMenuIconsColor: Colors.white,
+        );
 
     BetterPlayerConfiguration betterPlayerConfiguration =
         BetterPlayerConfiguration(
-            aspectRatio: 16 / 9,
-            fit: BoxFit.contain,
-            controlsConfiguration: controlsConfiguration);
+          aspectRatio: 16 / 9,
+          fit: BoxFit.contain,
+          controlsConfiguration: controlsConfiguration,
+        );
     BetterPlayerDataSource dataSource = BetterPlayerDataSource(
-        BetterPlayerDataSourceType.network, Constants.elephantDreamVideoUrl);
+      BetterPlayerDataSourceType.network,
+      Constants.elephantDreamVideoUrl,
+    );
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _betterPlayerController.setupDataSource(dataSource);
     super.initState();
@@ -44,9 +47,7 @@ class _ControlsConfigurationPageState extends State<ControlsConfigurationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Controls configuration"),
-      ),
+      appBar: AppBar(title: Text("Controls configuration")),
       body: Column(
         children: [
           const SizedBox(height: 8),
@@ -66,12 +67,13 @@ class _ControlsConfigurationPageState extends State<ControlsConfigurationPage> {
               setState(() {
                 _betterPlayerController.setBetterPlayerControlsConfiguration(
                   BetterPlayerControlsConfiguration(
-                      overflowModalColor: Colors.amberAccent),
+                    overflowModalColor: Colors.amberAccent,
+                  ),
                 );
               });
             },
             child: Text("Reset settings"),
-          )
+          ),
         ],
       ),
     );

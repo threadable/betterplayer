@@ -15,17 +15,15 @@ class _DrmPageState extends State<DrmPage> {
   @override
   void initState() {
     BetterPlayerConfiguration betterPlayerConfiguration =
-        BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
-      fit: BoxFit.contain,
-    );
+        BetterPlayerConfiguration(aspectRatio: 16 / 9, fit: BoxFit.contain);
     BetterPlayerDataSource _tokenDataSource = BetterPlayerDataSource(
       BetterPlayerDataSourceType.network,
       Constants.tokenEncodedHlsUrl,
       videoFormat: BetterPlayerVideoFormat.hls,
       drmConfiguration: BetterPlayerDrmConfiguration(
-          drmType: BetterPlayerDrmType.token,
-          token: Constants.tokenEncodedHlsToken),
+        drmType: BetterPlayerDrmType.token,
+        token: Constants.tokenEncodedHlsToken,
+      ),
     );
     _tokenController = BetterPlayerController(betterPlayerConfiguration);
     _tokenController.setupDataSource(_tokenDataSource);
@@ -35,9 +33,10 @@ class _DrmPageState extends State<DrmPage> {
       BetterPlayerDataSourceType.network,
       Constants.widevineVideoUrl,
       drmConfiguration: BetterPlayerDrmConfiguration(
-          drmType: BetterPlayerDrmType.widevine,
-          licenseUrl: Constants.widevineLicenseUrl,
-          headers: {"Test": "Test2"}),
+        drmType: BetterPlayerDrmType.widevine,
+        licenseUrl: Constants.widevineLicenseUrl,
+        headers: {"Test": "Test2"},
+      ),
     );
     _widevineController.setupDataSource(_widevineDataSource);
 
@@ -59,9 +58,7 @@ class _DrmPageState extends State<DrmPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("DRM player"),
-      ),
+      appBar: AppBar(title: Text("DRM player")),
       body: SingleChildScrollView(
         child: Column(
           children: [

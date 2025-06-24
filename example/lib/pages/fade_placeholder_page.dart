@@ -17,12 +17,12 @@ class _FadePlaceholderPageState extends State<FadePlaceholderPage> {
   void initState() {
     BetterPlayerConfiguration betterPlayerConfiguration =
         BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
-      fit: BoxFit.contain,
-      placeholder: _buildPlaceholder(),
-      showPlaceholderUntilPlay: true,
-      placeholderOnTop: false,
-    );
+          aspectRatio: 16 / 9,
+          fit: BoxFit.contain,
+          placeholder: _buildPlaceholder(),
+          showPlaceholderUntilPlay: true,
+          placeholderOnTop: false,
+        );
     BetterPlayerDataSource dataSource = BetterPlayerDataSource(
       BetterPlayerDataSourceType.network,
       Constants.forBiggerBlazesUrl,
@@ -47,10 +47,7 @@ class _FadePlaceholderPageState extends State<FadePlaceholderPage> {
           opacity: showPlaceholder ? 1.0 : 0.0,
           child: AspectRatio(
             aspectRatio: 16 / 9,
-            child: Image.network(
-              Constants.catImageUrl,
-              fit: BoxFit.fill,
-            ),
+            child: Image.network(Constants.catImageUrl, fit: BoxFit.fill),
           ),
         );
       },
@@ -60,9 +57,7 @@ class _FadePlaceholderPageState extends State<FadePlaceholderPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Fade placeholder player"),
-      ),
+      appBar: AppBar(title: Text("Fade placeholder player")),
       body: Column(
         children: [
           const SizedBox(height: 8),

@@ -14,10 +14,7 @@ class _CachePageState extends State<CachePage> {
   @override
   void initState() {
     BetterPlayerConfiguration betterPlayerConfiguration =
-        BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
-      fit: BoxFit.contain,
-    );
+        BetterPlayerConfiguration(aspectRatio: 16 / 9, fit: BoxFit.contain);
     _betterPlayerDataSource = BetterPlayerDataSource(
       BetterPlayerDataSourceType.network,
       Constants.phantomVideoUrl,
@@ -38,9 +35,7 @@ class _CachePageState extends State<CachePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Cache"),
-      ),
+      appBar: AppBar(title: Text("Cache")),
       body: Column(
         children: [
           const SizedBox(height: 8),

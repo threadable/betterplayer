@@ -15,10 +15,10 @@ class _ControlsAlwaysVisiblePageState extends State<ControlsAlwaysVisiblePage> {
   void initState() {
     BetterPlayerConfiguration betterPlayerConfiguration =
         BetterPlayerConfiguration(
-      aspectRatio: 16 / 9,
-      fit: BoxFit.contain,
-      handleLifecycle: true,
-    );
+          aspectRatio: 16 / 9,
+          fit: BoxFit.contain,
+          handleLifecycle: true,
+        );
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _setupDataSource();
     super.initState();
@@ -35,9 +35,7 @@ class _ControlsAlwaysVisiblePageState extends State<ControlsAlwaysVisiblePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Controls always visible"),
-      ),
+      appBar: AppBar(title: Text("Controls always visible")),
       body: Column(
         children: [
           const SizedBox(height: 8),
@@ -54,11 +52,13 @@ class _ControlsAlwaysVisiblePageState extends State<ControlsAlwaysVisiblePage> {
             child: BetterPlayer(controller: _betterPlayerController),
           ),
           ElevatedButton(
-              onPressed: () {
-                _betterPlayerController.setControlsAlwaysVisible(
-                    !(_betterPlayerController.controlsAlwaysVisible));
-              },
-              child: Text("Toggle always visible controls"))
+            onPressed: () {
+              _betterPlayerController.setControlsAlwaysVisible(
+                !(_betterPlayerController.controlsAlwaysVisible),
+              );
+            },
+            child: Text("Toggle always visible controls"),
+          ),
         ],
       ),
     );

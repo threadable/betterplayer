@@ -14,43 +14,46 @@ class _HlsSubtitlesPageState extends State<HlsSubtitlesPage> {
   void initState() {
     BetterPlayerControlsConfiguration controlsConfiguration =
         BetterPlayerControlsConfiguration(
-      controlBarColor: Colors.black26,
-      iconsColor: Colors.white,
-      playIcon: Icons.play_arrow_outlined,
-      progressBarPlayedColor: Colors.indigo,
-      progressBarHandleColor: Colors.indigo,
-      skipBackIcon: Icons.replay_10_outlined,
-      skipForwardIcon: Icons.forward_10_outlined,
-      backwardSkipTimeInMilliseconds: 10000,
-      forwardSkipTimeInMilliseconds: 10000,
-      enableSkips: true,
-      enableFullscreen: true,
-      enablePip: true,
-      enablePlayPause: true,
-      enableMute: true,
-      enableAudioTracks: true,
-      enableProgressText: true,
-      enableSubtitles: true,
-      showControlsOnInitialize: true,
-      enablePlaybackSpeed: true,
-      controlBarHeight: 40,
-      loadingColor: Colors.red,
-      overflowModalColor: Colors.black54,
-      overflowModalTextColor: Colors.white,
-      overflowMenuIconsColor: Colors.white,
-    );
+          controlBarColor: Colors.black26,
+          iconsColor: Colors.white,
+          playIcon: Icons.play_arrow_outlined,
+          progressBarPlayedColor: Colors.indigo,
+          progressBarHandleColor: Colors.indigo,
+          skipBackIcon: Icons.replay_10_outlined,
+          skipForwardIcon: Icons.forward_10_outlined,
+          backwardSkipTimeInMilliseconds: 10000,
+          forwardSkipTimeInMilliseconds: 10000,
+          enableSkips: true,
+          enableFullscreen: true,
+          enablePip: true,
+          enablePlayPause: true,
+          enableMute: true,
+          enableAudioTracks: true,
+          enableProgressText: true,
+          enableSubtitles: true,
+          showControlsOnInitialize: true,
+          enablePlaybackSpeed: true,
+          controlBarHeight: 40,
+          loadingColor: Colors.red,
+          overflowModalColor: Colors.black54,
+          overflowModalTextColor: Colors.white,
+          overflowMenuIconsColor: Colors.white,
+        );
 
     BetterPlayerConfiguration betterPlayerConfiguration =
         BetterPlayerConfiguration(
-            controlsConfiguration: controlsConfiguration,
-            aspectRatio: 16 / 9,
-            fit: BoxFit.contain,
-            subtitlesConfiguration: BetterPlayerSubtitlesConfiguration(
-              fontSize: 16.0,
-            ));
+          controlsConfiguration: controlsConfiguration,
+          aspectRatio: 16 / 9,
+          fit: BoxFit.contain,
+          subtitlesConfiguration: BetterPlayerSubtitlesConfiguration(
+            fontSize: 16.0,
+          ),
+        );
     BetterPlayerDataSource dataSource = BetterPlayerDataSource(
-        BetterPlayerDataSourceType.network, Constants.hlsPlaylistUrl,
-        useAsmsSubtitles: true);
+      BetterPlayerDataSourceType.network,
+      Constants.hlsPlaylistUrl,
+      useAsmsSubtitles: true,
+    );
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _betterPlayerController.setupDataSource(dataSource);
     super.initState();
@@ -59,9 +62,7 @@ class _HlsSubtitlesPageState extends State<HlsSubtitlesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("HLS subtitles"),
-      ),
+      appBar: AppBar(title: Text("HLS subtitles")),
       body: SingleChildScrollView(
         child: Column(
           children: [
