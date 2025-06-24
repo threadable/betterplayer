@@ -17,6 +17,9 @@ jobs:
           uses: actions/checkout@v2
         - name: Check format
           run: dart format --set-exit-if-changed .
+        - name: Show diff if formatting changed
+          if: failure()
+          run: git --no-pager diff --color
 
   lint:
     name: Lint
