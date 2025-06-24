@@ -24,11 +24,12 @@ jobs:
           continue-on-error: true
         - name: Show diff of formatted Dart files
           run: |
-            find . -name '*.dart' -print0 | while IFS= read -r -d '' file; do
+            for file in $(find . -name '*.dart'); do
               if [ -f "/tmp/orig/$file" ]; then
                 diff -u "/tmp/orig/$file" "$file" || true
               fi
             done
+
 
   lint:
     name: Lint
