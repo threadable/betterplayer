@@ -14,7 +14,7 @@ jobs:
 
       steps:
         - name: Checkout code
-          uses: actions/checkout@v2
+          uses: actions/checkout@v4
         - name: Check format
           run: dart format --set-exit-if-changed .
         - name: Show diff if formatting changed
@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Get dependencies for example
         run: flutter pub get
         working-directory: example
@@ -44,6 +44,6 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Test using flutter test
         run: flutter test
