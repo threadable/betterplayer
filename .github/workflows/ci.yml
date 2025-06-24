@@ -15,8 +15,12 @@ jobs:
       steps:
         - name: Checkout code
           uses: actions/checkout@v4
+        - name: Copy files for diff
+          run: find . -name '*.dart' -exec cp --parents {} /tmp/orig/ \;
         - name: Check format
           run: dart format --set-exit-if-changed .
+        - name: Show diff after format
+          run: diff -urN /tmp/orig . || true
 
   lint:
     name: Lint
