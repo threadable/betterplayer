@@ -10,27 +10,14 @@ jobs:
       name: Check format using flutter format
       runs-on: ubuntu-latest
       container:
-        image: ghcr.io/cirruslabs/flutter:latest
+        image: ghcr.io/cirruslabs/flutter:3.24.4
 
       steps:
         - name: Checkout code
           uses: actions/checkout@v4
-        - name: Prepare original files for diff
-          run: |
-            mkdir -p /tmp/orig
-            find . -name '*.dart' -exec cp --parents {} /tmp/orig/ \;
         - name: Check format
           run: dart format --set-exit-if-changed .
           continue-on-error: true
-        - name: Show diff of formatted Dart files
-          run: |
-            for file in $(find . -name '*.dart'); do
-              if [ -f "/tmp/orig/$file" ]; then
-                diff -u "/tmp/orig/$file" "$file" || true
-              fi
-            done
-
-
   lint:
     name: Lint
     runs-on: ubuntu-latest
