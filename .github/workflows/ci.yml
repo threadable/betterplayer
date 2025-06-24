@@ -10,7 +10,7 @@ jobs:
       name: Check format using flutter format
       runs-on: ubuntu-latest
       container:
-        image: ghcr.io/cirruslabs/flutter:3.24.4
+        image: ghcr.io/cirruslabs/flutter:3.32.4
 
       steps:
         - name: Checkout code
