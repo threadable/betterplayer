@@ -1,6 +1,6 @@
 name: threadable_better_player
 description: Advanced video player, fork of better_player with upcoming modifications and continued support.
-version: 1.0.0
+version: 2.1.0
 # Disabled because of warning from analyzer
 # authors:
 #  - Jakub Homlala <jhomlala@gmail.com>
