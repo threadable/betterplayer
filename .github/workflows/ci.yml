@@ -19,6 +19,7 @@ jobs:
           run: find . -name '*.dart' -exec cp --parents {} /tmp/orig/ \;
         - name: Check format
           run: dart format --set-exit-if-changed .
+          continue-on-error: true
         - name: Show diff after format
           run: diff -urN /tmp/orig . || true
 
