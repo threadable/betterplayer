@@ -139,7 +139,8 @@ class MimeTypes {
     if (codec.startsWith('dvav') ||
         codec.startsWith('dva1') ||
         codec.startsWith('dvhe') ||
-        codec.startsWith('dvh1')) return MimeTypes.videoDolbyVision;
+        codec.startsWith('dvh1'))
+      return MimeTypes.videoDolbyVision;
 
     if (codec.startsWith('av01')) return MimeTypes.videoAv1;
 
@@ -155,8 +156,9 @@ class MimeTypes {
         final String objectTypeString = codec.substring(5);
         if (objectTypeString.length >= 2) {
           try {
-            final String objectTypeHexString =
-                objectTypeString.substring(0, 2).toUpperCase();
+            final String objectTypeHexString = objectTypeString
+                .substring(0, 2)
+                .toUpperCase();
             final int objectTypeInt = int.parse(objectTypeHexString, radix: 16);
             mimeType = _getMimeTypeFromMp4ObjectType(objectTypeInt);
           } on FormatException {

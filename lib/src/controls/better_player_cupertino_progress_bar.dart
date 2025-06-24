@@ -15,8 +15,8 @@ class BetterPlayerCupertinoVideoProgressBar extends StatefulWidget {
     this.onDragUpdate,
     this.onTapDown,
     Key? key,
-  })  : colors = colors ?? BetterPlayerProgressColors(),
-        super(key: key);
+  }) : colors = colors ?? BetterPlayerProgressColors(),
+       super(key: key);
 
   final VideoPlayerController? controller;
   final BetterPlayerController? betterPlayerController;
@@ -68,7 +68,8 @@ class _VideoProgressBarState
   @override
   Widget build(BuildContext context) {
     final bool enableProgressBarDrag = betterPlayerController!
-        .betterPlayerControlsConfiguration.enableProgressBarDrag;
+        .betterPlayerControlsConfiguration
+        .enableProgressBarDrag;
     return GestureDetector(
       onHorizontalDragStart: (DragStartDetails details) {
         if (!controller!.value.initialized || !enableProgressBarDrag) {
@@ -124,10 +125,7 @@ class _VideoProgressBarState
           width: MediaQuery.of(context).size.width,
           color: Colors.transparent,
           child: CustomPaint(
-            painter: _ProgressBarPainter(
-              _getValue(),
-              widget.colors,
-            ),
+            painter: _ProgressBarPainter(_getValue(), widget.colors),
           ),
         ),
       ),
@@ -214,8 +212,9 @@ class _ProgressBarPainter extends CustomPainter {
     }
     final double playedPartPercent =
         value.position.inMilliseconds / value.duration!.inMilliseconds;
-    final double playedPart =
-        playedPartPercent > 1 ? size.width : playedPartPercent * size.width;
+    final double playedPart = playedPartPercent > 1
+        ? size.width
+        : playedPartPercent * size.width;
     for (final DurationRange range in value.buffered) {
       final double start = range.startFraction(value.duration!) * size.width;
       final double end = range.endFraction(value.duration!) * size.width;
@@ -242,9 +241,12 @@ class _ProgressBarPainter extends CustomPainter {
     );
 
     final shadowPath = Path()
-      ..addOval(Rect.fromCircle(
+      ..addOval(
+        Rect.fromCircle(
           center: Offset(playedPart, baseOffset + barHeight / 2),
-          radius: handleHeight));
+          radius: handleHeight,
+        ),
+      );
 
     canvas.drawShadow(shadowPath, Colors.black, 0.2, false);
     canvas.drawCircle(

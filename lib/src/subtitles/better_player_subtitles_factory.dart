@@ -6,7 +6,8 @@ import 'better_player_subtitle.dart';
 
 class BetterPlayerSubtitlesFactory {
   static Future<List<BetterPlayerSubtitle>> parseSubtitles(
-      BetterPlayerSubtitlesSource source) async {
+    BetterPlayerSubtitlesSource source,
+  ) async {
     switch (source.type) {
       case BetterPlayerSubtitlesSourceType.file:
         return _parseSubtitlesFromFile(source);
@@ -20,7 +21,8 @@ class BetterPlayerSubtitlesFactory {
   }
 
   static Future<List<BetterPlayerSubtitle>> _parseSubtitlesFromFile(
-      BetterPlayerSubtitlesSource source) async {
+    BetterPlayerSubtitlesSource source,
+  ) async {
     try {
       final List<BetterPlayerSubtitle> subtitles = [];
       for (final String? url in source.urls!) {
@@ -41,7 +43,8 @@ class BetterPlayerSubtitlesFactory {
   }
 
   static Future<List<BetterPlayerSubtitle>> _parseSubtitlesFromNetwork(
-      BetterPlayerSubtitlesSource source) async {
+    BetterPlayerSubtitlesSource source,
+  ) async {
     try {
       final client = HttpClient();
       final List<BetterPlayerSubtitle> subtitles = [];
@@ -64,13 +67,15 @@ class BetterPlayerSubtitlesFactory {
       return subtitles;
     } catch (exception) {
       BetterPlayerUtils.log(
-          "Failed to read subtitles from network: $exception");
+        "Failed to read subtitles from network: $exception",
+      );
     }
     return [];
   }
 
   static List<BetterPlayerSubtitle> _parseSubtitlesFromMemory(
-      BetterPlayerSubtitlesSource source) {
+    BetterPlayerSubtitlesSource source,
+  ) {
     try {
       return _parseString(source.content!);
     } catch (exception) {

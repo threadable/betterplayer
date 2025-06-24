@@ -14,8 +14,8 @@ class BetterPlayerMaterialVideoProgressBar extends StatefulWidget {
     this.onDragUpdate,
     this.onTapDown,
     Key? key,
-  })  : colors = colors ?? BetterPlayerProgressColors(),
-        super(key: key);
+  }) : colors = colors ?? BetterPlayerProgressColors(),
+       super(key: key);
 
   final VideoPlayerController? controller;
   final BetterPlayerController? betterPlayerController;
@@ -67,7 +67,9 @@ class _VideoProgressBarState
   @override
   Widget build(BuildContext context) {
     final bool enableProgressBarDrag = betterPlayerController!
-        .betterPlayerConfiguration.controlsConfiguration.enableProgressBarDrag;
+        .betterPlayerConfiguration
+        .controlsConfiguration
+        .enableProgressBarDrag;
 
     return GestureDetector(
       onHorizontalDragStart: (DragStartDetails details) {
@@ -126,10 +128,7 @@ class _VideoProgressBarState
           width: MediaQuery.of(context).size.width,
           color: Colors.transparent,
           child: CustomPaint(
-            painter: _ProgressBarPainter(
-              _getValue(),
-              widget.colors,
-            ),
+            painter: _ProgressBarPainter(_getValue(), widget.colors),
           ),
         ),
       ),
@@ -217,8 +216,9 @@ class _ProgressBarPainter extends CustomPainter {
     if (playedPartPercent.isNaN) {
       playedPartPercent = 0;
     }
-    final double playedPart =
-        playedPartPercent > 1 ? size.width : playedPartPercent * size.width;
+    final double playedPart = playedPartPercent > 1
+        ? size.width
+        : playedPartPercent * size.width;
     for (final DurationRange range in value.buffered) {
       double start = range.startFraction(value.duration!) * size.width;
       if (start.isNaN) {

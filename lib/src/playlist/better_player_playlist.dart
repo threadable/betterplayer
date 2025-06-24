@@ -35,21 +35,21 @@ class BetterPlayerPlaylistState extends State<BetterPlayerPlaylist> {
   @override
   void initState() {
     _betterPlayerPlaylistController = BetterPlayerPlaylistController(
-        widget.betterPlayerDataSourceList,
-        betterPlayerConfiguration: widget.betterPlayerConfiguration,
-        betterPlayerPlaylistConfiguration:
-            widget.betterPlayerPlaylistConfiguration);
+      widget.betterPlayerDataSourceList,
+      betterPlayerConfiguration: widget.betterPlayerConfiguration,
+      betterPlayerPlaylistConfiguration:
+          widget.betterPlayerPlaylistConfiguration,
+    );
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: _betterPlayerController!.getAspectRatio() ??
+      aspectRatio:
+          _betterPlayerController!.getAspectRatio() ??
           BetterPlayerUtils.calculateAspectRatio(context),
-      child: BetterPlayer(
-        controller: _betterPlayerController!,
-      ),
+      child: BetterPlayer(controller: _betterPlayerController!),
     );
   }
 

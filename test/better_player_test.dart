@@ -10,30 +10,44 @@ void main() {
     VisibilityDetectorController.instance.updateInterval = Duration.zero;
   });
 
-  testWidgets("Better Player simple player - network",
-      (WidgetTester tester) async {
-    await tester.pumpWidget(_wrapWidget(
-        BetterPlayer.network(BetterPlayerTestUtils.bugBuckBunnyVideoUrl)));
-    expect(find.byWidgetPredicate((widget) => widget is BetterPlayer),
-        findsOneWidget);
+  testWidgets("Better Player simple player - network", (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrapWidget(
+        BetterPlayer.network(BetterPlayerTestUtils.bugBuckBunnyVideoUrl),
+      ),
+    );
+    expect(
+      find.byWidgetPredicate((widget) => widget is BetterPlayer),
+      findsOneWidget,
+    );
   });
 
-  testWidgets("Better Player simple player - file",
-      (WidgetTester tester) async {
-    await tester.pumpWidget(_wrapWidget(
-        BetterPlayer.network(BetterPlayerTestUtils.bugBuckBunnyVideoUrl)));
-    expect(find.byWidgetPredicate((widget) => widget is BetterPlayer),
-        findsOneWidget);
+  testWidgets("Better Player simple player - file", (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrapWidget(
+        BetterPlayer.network(BetterPlayerTestUtils.bugBuckBunnyVideoUrl),
+      ),
+    );
+    expect(
+      find.byWidgetPredicate((widget) => widget is BetterPlayer),
+      findsOneWidget,
+    );
   });
 
   testWidgets("BetterPlayer - with controller", (WidgetTester tester) async {
     final BetterPlayerMockController betterPlayerController =
         BetterPlayerMockController(const BetterPlayerConfiguration());
-    await tester.pumpWidget(_wrapWidget(BetterPlayer(
-      controller: betterPlayerController,
-    )));
-    expect(find.byWidgetPredicate((widget) => widget is BetterPlayer),
-        findsOneWidget);
+    await tester.pumpWidget(
+      _wrapWidget(BetterPlayer(controller: betterPlayerController)),
+    );
+    expect(
+      find.byWidgetPredicate((widget) => widget is BetterPlayer),
+      findsOneWidget,
+    );
   });
 }
 

@@ -14,26 +14,22 @@ void main() {
   });
 
   setUp(() {
-    _mockController =
-        BetterPlayerMockController(const BetterPlayerConfiguration());
+    _mockController = BetterPlayerMockController(
+      const BetterPlayerConfiguration(),
+    );
   });
 
-  testWidgets(
-    "One of children is BetterPlayerWithControls",
-    (WidgetTester tester) async {
-      await tester.pumpWidget(
-        _wrapWidget(
-          BetterPlayer(
-            controller: _mockController,
-          ),
-        ),
-      );
-      expect(
-          find.byWidgetPredicate(
-              (widget) => widget is BetterPlayerWithControls),
-          findsOneWidget);
-    },
-  );
+  testWidgets("One of children is BetterPlayerWithControls", (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrapWidget(BetterPlayer(controller: _mockController)),
+    );
+    expect(
+      find.byWidgetPredicate((widget) => widget is BetterPlayerWithControls),
+      findsOneWidget,
+    );
+  });
 }
 
 ///Wrap widget with material app to handle all features like navigation and

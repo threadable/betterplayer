@@ -21,10 +21,10 @@ class HlsMediaPlaylist extends HlsPlaylist {
     required List<String> tags,
     required bool hasIndependentSegments,
   }) : super(
-          baseUri: baseUri,
-          tags: tags,
-          hasIndependentSegments: hasIndependentSegments,
-        );
+         baseUri: baseUri,
+         tags: tags,
+         hasIndependentSegments: hasIndependentSegments,
+       );
 
   factory HlsMediaPlaylist.create({
     required int playlistType,

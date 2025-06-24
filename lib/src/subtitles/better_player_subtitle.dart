@@ -7,12 +7,7 @@ class BetterPlayerSubtitle {
   final Duration? end;
   final List<String>? texts;
 
-  BetterPlayerSubtitle._({
-    this.index,
-    this.start,
-    this.end,
-    this.texts,
-  });
+  BetterPlayerSubtitle._({this.index, this.start, this.end, this.texts});
 
   factory BetterPlayerSubtitle(String value, bool isWebVTT) {
     try {
@@ -38,7 +33,11 @@ class BetterPlayerSubtitle {
       final texts = scanner.sublist(1, scanner.length);
 
       return BetterPlayerSubtitle._(
-          index: -1, start: start, end: end, texts: texts);
+        index: -1,
+        start: start,
+        end: end,
+        texts: texts,
+      );
     } catch (exception) {
       BetterPlayerUtils.log("Failed to parse subtitle line: $scanner");
       return BetterPlayerSubtitle._();
@@ -46,7 +45,9 @@ class BetterPlayerSubtitle {
   }
 
   static BetterPlayerSubtitle _handle3LinesAndMoreSubtitles(
-      List<String> scanner, bool isWebVTT) {
+    List<String> scanner,
+    bool isWebVTT,
+  ) {
     try {
       int? index = -1;
       List<String> timeSplit = [];
@@ -64,7 +65,11 @@ class BetterPlayerSubtitle {
       final end = _stringToDuration(timeSplit[1]);
       final texts = scanner.sublist(firstLineOfText, scanner.length);
       return BetterPlayerSubtitle._(
-          index: index, start: start, end: end, texts: texts);
+        index: index,
+        start: start,
+        end: end,
+        texts: texts,
+      );
     } catch (exception) {
       BetterPlayerUtils.log("Failed to parse subtitle line: $scanner");
       return BetterPlayerSubtitle._();
@@ -97,10 +102,11 @@ class BetterPlayerSubtitle {
       }
 
       final result = Duration(
-          hours: int.tryParse(component[0])!,
-          minutes: int.tryParse(component[1])!,
-          seconds: int.tryParse(secsAndMillsSplit[0])!,
-          milliseconds: int.tryParse(secsAndMillsSplit[1])!);
+        hours: int.tryParse(component[0])!,
+        minutes: int.tryParse(component[1])!,
+        seconds: int.tryParse(secsAndMillsSplit[0])!,
+        milliseconds: int.tryParse(secsAndMillsSplit[1])!,
+      );
       return result;
     } catch (exception) {
       BetterPlayerUtils.log("Failed to process value: $value");

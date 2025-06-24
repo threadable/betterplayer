@@ -40,8 +40,9 @@ class _BetterPlayerSubtitlesDrawerState
 
   @override
   void initState() {
-    _visibilityStreamSubscription =
-        widget.playerVisibilityStream.listen((state) {
+    _visibilityStreamSubscription = widget.playerVisibilityStream.listen((
+      state,
+    ) {
       setState(() {
         _playerVisible = state;
       });
@@ -53,29 +54,33 @@ class _BetterPlayerSubtitlesDrawerState
       _configuration = setupDefaultConfiguration();
     }
 
-    widget.betterPlayerController.videoPlayerController!
-        .addListener(_updateState);
+    widget.betterPlayerController.videoPlayerController!.addListener(
+      _updateState,
+    );
 
     _outerTextStyle = TextStyle(
-        fontSize: _configuration!.fontSize,
-        fontFamily: _configuration!.fontFamily,
-        foreground: Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = _configuration!.outlineSize
-          ..color = _configuration!.outlineColor);
+      fontSize: _configuration!.fontSize,
+      fontFamily: _configuration!.fontFamily,
+      foreground: Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = _configuration!.outlineSize
+        ..color = _configuration!.outlineColor,
+    );
 
     _innerTextStyle = TextStyle(
-        fontFamily: _configuration!.fontFamily,
-        color: _configuration!.fontColor,
-        fontSize: _configuration!.fontSize);
+      fontFamily: _configuration!.fontFamily,
+      color: _configuration!.fontColor,
+      fontSize: _configuration!.fontSize,
+    );
 
     super.initState();
   }
 
   @override
   void dispose() {
-    widget.betterPlayerController.videoPlayerController!
-        .removeListener(_updateState);
+    widget.betterPlayerController.videoPlayerController!.removeListener(
+      _updateState,
+    );
     _visibilityStreamSubscription.cancel();
     super.dispose();
   }
@@ -95,19 +100,21 @@ class _BetterPlayerSubtitlesDrawerState
     final BetterPlayerSubtitle? subtitle = _getSubtitleAtCurrentPosition();
     widget.betterPlayerController.renderedSubtitle = subtitle;
     final List<String> subtitles = subtitle?.texts ?? [];
-    final List<Widget> textWidgets =
-        subtitles.map((text) => _buildSubtitleTextWidget(text)).toList();
+    final List<Widget> textWidgets = subtitles
+        .map((text) => _buildSubtitleTextWidget(text))
+        .toList();
 
     return Container(
       height: double.infinity,
       width: double.infinity,
       child: Padding(
         padding: EdgeInsets.only(
-            bottom: _playerVisible
-                ? _configuration!.bottomPadding + 30
-                : _configuration!.bottomPadding,
-            left: _configuration!.leftPadding,
-            right: _configuration!.rightPadding),
+          bottom: _playerVisible
+              ? _configuration!.bottomPadding + 30
+              : _configuration!.bottomPadding,
+          left: _configuration!.leftPadding,
+          right: _configuration!.rightPadding,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: textWidgets,
@@ -132,14 +139,16 @@ class _BetterPlayerSubtitlesDrawerState
   }
 
   Widget _buildSubtitleTextWidget(String subtitleText) {
-    return Row(children: [
-      Expanded(
-        child: Align(
-          alignment: _configuration!.alignment,
-          child: _getTextWithStroke(subtitleText),
+    return Row(
+      children: [
+        Expanded(
+          child: Align(
+            alignment: _configuration!.alignment,
+            child: _getTextWithStroke(subtitleText),
+          ),
         ),
-      ),
-    ]);
+      ],
+    );
   }
 
   Widget _getTextWithStroke(String subtitleText) {
@@ -151,17 +160,14 @@ class _BetterPlayerSubtitlesDrawerState
             _buildHtmlWidget(subtitleText, _outerTextStyle)
           else
             const SizedBox(),
-          _buildHtmlWidget(subtitleText, _innerTextStyle)
+          _buildHtmlWidget(subtitleText, _innerTextStyle),
         ],
       ),
     );
   }
 
   Widget _buildHtmlWidget(String text, TextStyle textStyle) {
-    return HtmlWidget(
-      text,
-      textStyle: textStyle,
-    );
+    return HtmlWidget(text, textStyle: textStyle);
   }
 
   BetterPlayerSubtitlesConfiguration setupDefaultConfiguration() {
