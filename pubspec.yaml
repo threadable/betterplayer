@@ -1,5 +1,5 @@
 name: threadable_better_player
-description: Advanced video player, fork of better_player with upcoming modifications and continued support.
+description: Advanced video player maintained by Threadable with continued Flutter, iOS, and Android support.
 version: 2.1.0
 homepage: https://github.com/threadable/betterplayer
 
@@ -29,7 +29,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.jhomlala.better_player
+        package: io.threadable.betterplayer
         pluginClass: BetterPlayerPlugin
       ios:
         pluginClass: BetterPlayerPlugin
