@@ -112,10 +112,28 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
         };
         break;
     }
-    await _channel.invokeMethod<void>('setDataSource', <String, dynamic>{
-      'textureId': textureId,
-      'dataSource': dataSourceDescription,
-    });
+
+    final Object sourceForDebug =
+        dataSourceDescription['uri'] ??
+        dataSourceDescription['asset'] ??
+        dataSourceDescription['key'] ??
+        dataSource.sourceType.name;
+
+    try {
+      await _channel.invokeMethod<void>('setDataSource', <String, dynamic>{
+        'textureId': textureId,
+        'dataSource': dataSourceDescription,
+      });
+    } on PlatformException catch (error) {
+      throw PlatformException(
+        code: error.code,
+        message:
+            '${error.message ?? 'Failed to set data source'} '
+            '(source: $sourceForDebug)',
+        details: error.details,
+        stacktrace: error.stacktrace,
+      );
+    }
     return;
   }
 
