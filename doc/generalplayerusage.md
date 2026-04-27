@@ -68,4 +68,4 @@ Create `BetterPlayer` widget wrapped in `AspectRatio` widget:
 ```
 
 ## Example project
-Check [Example project](https://github.com/jhomlala/betterplayer/tree/master/example) which shows how to use Better Player in different scenarios.
+Check [Example project](https://github.com/threadable/betterplayer/tree/master/example) which shows how to use Better Player in different scenarios.

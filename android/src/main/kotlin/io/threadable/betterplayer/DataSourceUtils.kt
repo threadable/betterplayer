@@ -1,4 +1,4 @@
-package com.jhomlala.better_player
+package io.threadable.betterplayer
 
 import android.net.Uri
 import androidx.media3.datasource.DataSource

@@ -1,4 +1,4 @@
-package com.jhomlala.better_player_example
+package io.threadable.betterplayer.example
 
 import android.content.Intent
 import android.os.Build

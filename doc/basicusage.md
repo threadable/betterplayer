@@ -1,5 +1,5 @@
 ## Example project
-Check [Example project](https://github.com/jhomlala/betterplayer/tree/master/example) which shows how to use Better Player in different scenarios.
+Check [Example project](https://github.com/threadable/betterplayer/tree/master/example) which shows how to use Better Player in different scenarios.
 
 ### Basic usage
 There are 2 basic methods which you can use to setup Better Player:

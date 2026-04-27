@@ -2,64 +2,64 @@
 
 # Better Player
 [![pub package](https://img.shields.io/pub/v/better_player.svg)](https://pub.dartlang.org/packages/better_player)
-[![pub package](https://img.shields.io/github/license/jhomlala/betterplayer.svg?style=flat)](https://github.com/jhomlala/betterplayer)
-[![pub package](https://img.shields.io/badge/platform-flutter-blue.svg)](https://github.com/jhomlala/betterplayer)
+[![pub package](https://img.shields.io/github/license/threadable/betterplayer.svg?style=flat)](https://github.com/threadable/betterplayer)
+[![pub package](https://img.shields.io/badge/platform-flutter-blue.svg)](https://github.com/threadable/betterplayer)
 Based on [better_player](https://pub.dev/packages/better_player).
 Advanced video player based on video_player and Chewie. It's solves many typical use cases and it's easy to run.
 
 <table>
    <tr>
       <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/1.png">
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/1.png">
       </td>
       <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/2.png">
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/2.png">
       </td>
       <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/3.png">
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/3.png">
       </td>
       <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/4.png">
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/4.png">
       </td>
       <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/5.png">
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/5.png">
       </td>
       <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/6.png">
-      </td>
-   </tr>
-   <tr>
-      <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/7.png">
-      </td>
-      <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/8.png">
-      </td>
-      <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/9.png">
-      </td>
-      <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/10.png">
-      </td>
-      <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/11.png">
-      </td>
-      <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/12.png">
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/6.png">
       </td>
    </tr>
    <tr>
       <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/13.png">
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/7.png">
       </td>
       <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/14.png">
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/8.png">
       </td>
       <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/15.png">
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/9.png">
       </td>
       <td>
-         <img width="250px" src="https://raw.githubusercontent.com/jhomlala/betterplayer/master/media/16.png">
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/10.png">
+      </td>
+      <td>
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/11.png">
+      </td>
+      <td>
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/12.png">
+      </td>
+   </tr>
+   <tr>
+      <td>
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/13.png">
+      </td>
+      <td>
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/14.png">
+      </td>
+      <td>
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/15.png">
+      </td>
+      <td>
+         <img width="250px" src="https://raw.githubusercontent.com/threadable/betterplayer/master/media/16.png">
       </td>
     </tr>	
 </table>
@@ -88,8 +88,8 @@ This plugin is based on [Chewie](https://github.com/brianegan/chewie). Chewie is
 
 
 ## Documentation
-* [Official documentation](https://jhomlala.github.io/betterplayer/)
-* [Example application](https://github.com/jhomlala/betterplayer/tree/master/example)
+* [Official documentation](https://github.com/threadable/betterplayer/)
+* [Example application](https://github.com/threadable/betterplayer/tree/master/example)
 * [API reference](https://pub.dev/documentation/better_player/latest/better_player/better_player-library.html)
 
 

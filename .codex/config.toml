@@ -1,0 +1,4 @@
+[mcp_servers.dart]
+type = "stdio"
+command = "dart"
+args = ["mcp-server", "--force-roots-fallback"]

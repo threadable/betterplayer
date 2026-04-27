@@ -16,7 +16,7 @@ if (localPropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.jhomlala.better_player_example"
+    namespace = "io.threadable.betterplayer.example"
     compileSdk = 36
 
     compileOptions {
@@ -29,7 +29,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.jhomlala.better_player_example"
+        applicationId = "io.threadable.betterplayer.example"
         minSdk = 25
         targetSdk = 36
         versionCode = flutter.versionCode

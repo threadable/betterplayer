@@ -371,7 +371,7 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
   Widget buildView(int? textureId) {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       return UiKitView(
-        viewType: 'com.jhomlala/better_player',
+        viewType: 'io.threadable/betterplayer',
         creationParamsCodec: const StandardMessageCodec(),
         creationParams: {'textureId': textureId!},
       );

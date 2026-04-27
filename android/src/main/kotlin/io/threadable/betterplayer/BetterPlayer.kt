@@ -1,4 +1,4 @@
-package com.jhomlala.better_player
+package io.threadable.betterplayer
 
 import android.annotation.SuppressLint
 import android.app.Notification
@@ -62,9 +62,9 @@ import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
-import com.jhomlala.better_player.DataSourceUtils.getDataSourceFactory
-import com.jhomlala.better_player.DataSourceUtils.getUserAgent
-import com.jhomlala.better_player.DataSourceUtils.isHTTP
+import io.threadable.betterplayer.DataSourceUtils.getDataSourceFactory
+import io.threadable.betterplayer.DataSourceUtils.getUserAgent
+import io.threadable.betterplayer.DataSourceUtils.isHTTP
 
 import androidx.media3.common.Player
 import androidx.media3.session.MediaSession

@@ -1,4 +1,4 @@
-package com.jhomlala.better_player
+package io.threadable.betterplayer
 
 import android.content.Context
 import android.util.Log
