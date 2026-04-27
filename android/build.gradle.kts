@@ -10,7 +10,7 @@ val kotlinVersion = "2.2.21"
 val castFrameworkVersion = "22.3.0"
 
 android {
-    namespace = "com.jhomlala.better_player"
+    namespace = "io.threadable.betterplayer"
     compileSdk = 36
 
     defaultConfig {
