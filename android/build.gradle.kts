@@ -4,7 +4,7 @@ plugins {
 }
 
 val annotationVersion = "1.10.0"
-val workVersion = "2.11.1"
+val workVersion = "2.11.2"
 val media3Version = "1.10.0"
 val kotlinVersion = "2.2.21"
 val castFrameworkVersion = "22.3.0"
