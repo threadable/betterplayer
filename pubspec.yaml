@@ -2,7 +2,6 @@ name: threadable_better_player
 description: Advanced video player, fork of better_player with upcoming modifications and continued support.
 version: 2.1.0
 homepage: https://github.com/threadable/betterplayer
-documentation: https://jhomlala.github.io/betterplayer/
 
 environment:
   sdk: ">=3.8.1 <4.0.0"
@@ -12,7 +11,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
   meta: ^1.17.0
   flutter_widget_from_html_core: ^0.17.2
   visibility_detector: ^0.4.0+2
@@ -23,9 +21,6 @@ dependencies:
 
 dev_dependencies:
   flutter_test:
-    sdk: flutter
-
-  flutter_localizations:
     sdk: flutter
 
   flutter_lints: ^6.0.0
