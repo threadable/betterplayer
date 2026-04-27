@@ -1,6 +1,7 @@
 import 'package:threadable_better_player/threadable_better_player.dart';
 import 'package:threadable_better_player_example/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class NotificationPlayerPage extends StatefulWidget {
   @override
@@ -9,6 +10,7 @@ class NotificationPlayerPage extends StatefulWidget {
 
 class _NotificationPlayerPageState extends State<NotificationPlayerPage> {
   late BetterPlayerController _betterPlayerController;
+  String? _setupError;
 
   @override
   void initState() {
@@ -23,7 +25,7 @@ class _NotificationPlayerPageState extends State<NotificationPlayerPage> {
     super.initState();
   }
 
-  void _setupDataSource() async {
+  Future<void> _setupDataSource() async {
     // String imageUrl = await Utils.getFileUrl(Constants.logo);
     BetterPlayerDataSource dataSource = BetterPlayerDataSource(
       BetterPlayerDataSourceType.network,
@@ -35,7 +37,30 @@ class _NotificationPlayerPageState extends State<NotificationPlayerPage> {
         imageUrl: Constants.catImageUrl,
       ),
     );
-    _betterPlayerController.setupDataSource(dataSource);
+
+    try {
+      await _betterPlayerController.setupDataSource(dataSource);
+    } on PlatformException catch (error) {
+      debugPrint("Failed to set up notification player: ${error.message}");
+      if (mounted) {
+        setState(() {
+          _setupError = error.message ?? error.toString();
+        });
+      }
+    } catch (error) {
+      debugPrint("Failed to set up notification player: $error");
+      if (mounted) {
+        setState(() {
+          _setupError = error.toString();
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _betterPlayerController.dispose();
+    super.dispose();
   }
 
   @override
@@ -52,6 +77,14 @@ class _NotificationPlayerPageState extends State<NotificationPlayerPage> {
               style: TextStyle(fontSize: 16),
             ),
           ),
+          if (_setupError != null)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                "Failed to load demo video: $_setupError",
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
           AspectRatio(
             aspectRatio: 16 / 9,
             child: BetterPlayer(controller: _betterPlayerController),
