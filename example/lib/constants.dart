@@ -1,38 +1,34 @@
 class Constants {
   static const String bugBuckBunnyVideoUrl =
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+      "https://placeholdervideo.dev/1280x720";
   static const String forBiggerBlazesUrl =
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+      "https://placeholdervideo.dev/1280x720";
   static const String fileTestVideoUrl = "testvideo.mp4";
   static const String fileTestVideoEncryptUrl = "testvideo_encrypt.mp4";
   static const String networkTestVideoEncryptUrl =
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4";
+      "https://placeholdervideo.dev/1280x720";
   static const String fileExampleSubtitlesUrl = "example_subtitles.srt";
   static const String hlsTestStreamUrl =
       "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
   static const String hlsPlaylistUrl =
       "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
   static const Map<String, String> exampleResolutionsUrls = {
-    "LOW":
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-    "MEDIUM":
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    "LARGE":
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    "EXTRA_LARGE":
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    "LOW": "https://placeholdervideo.dev/640x360",
+    "MEDIUM": "https://placeholdervideo.dev/854x480",
+    "LARGE": "https://placeholdervideo.dev/1280x720",
+    "EXTRA_LARGE": "https://placeholdervideo.dev/1920x1080",
   };
   static const String phantomVideoUrl =
       "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
   static const String elephantDreamVideoUrl =
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4";
+      "https://placeholdervideo.dev/1280x720";
   static const String forBiggerJoyridesVideoUrl =
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4";
+      "https://placeholdervideo.dev/1280x720";
   static const String verticalVideoUrl =
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4";
+      "https://placeholdervideo.dev/1080x1920";
   static String logo = "logo.png";
   static String placeholderUrl =
-      "https://storage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg";
+      "https://placehold.co/1280x720/png?text=Threadable+Better+Player";
   static String elephantDreamStreamUrl =
       "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
 
@@ -52,7 +48,7 @@ class Constants {
   static String fairplayLicenseUrl = "https://fps.ezdrm.com/api/licenses/";
 
   static String catImageUrl =
-      "https://storage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg";
+      "https://placehold.co/1280x720/png?text=Threadable+Better+Player";
   static String dashStreamUrl =
       "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
   static String segmentedSubtitlesHlsUrl =
