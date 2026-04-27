@@ -1,11 +1,33 @@
-// import 'package:better_player_example/pages/welcome_page.dart';
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'pages/welcome_page.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+  };
+
+  PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+    debugPrint('Uncaught platform error in example app: $error');
+    debugPrintStack(stackTrace: stack);
+    return true;
+  };
+
+  runZonedGuarded(
+    () => runApp(MyApp()),
+    (Object error, StackTrace stack) {
+      debugPrint('Uncaught async error in example app: $error');
+      debugPrintStack(stackTrace: stack);
+    },
+  );
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -15,7 +37,7 @@ class MyApp extends StatelessWidget {
         LogicalKeySet(LogicalKeyboardKey.select): const ActivateIntent(),
       },
       child: MaterialApp(
-        title: 'Better player demo',
+        title: 'Threadable Better Player demo',
         localizationsDelegates: [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
