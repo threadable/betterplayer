@@ -1,0 +1,13 @@
+{
+  "object" : [
+    {
+      "mirror" : "betterplayer",
+      "original" : "threadable_better_player"
+    },
+    {
+      "mirror" : "threadable_better_player",
+      "original" : "betterplayer"
+    }
+  ],
+  "version" : 1
+}

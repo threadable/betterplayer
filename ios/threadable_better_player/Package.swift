@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "threadable_better_player",
+    name: "betterplayer",
     platforms: [
         .iOS("14.0")
     ],
