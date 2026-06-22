@@ -10,7 +10,7 @@ jobs:
     name: Check format using flutter format
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cirruslabs/flutter:stable
+      image: ghcr.io/cirruslabs/flutter:3.44.2
 
     steps:
       - name: Checkout code
@@ -21,7 +21,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cirruslabs/flutter:stable
+      image: ghcr.io/cirruslabs/flutter:3.44.2
 
     steps:
       - name: Checkout code
@@ -38,7 +38,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cirruslabs/flutter:stable
+      image: ghcr.io/cirruslabs/flutter:3.44.2
 
     steps:
       - name: Checkout code
