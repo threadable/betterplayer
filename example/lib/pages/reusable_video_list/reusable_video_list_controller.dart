@@ -1,5 +1,4 @@
 import 'package:threadable_better_player/threadable_better_player.dart';
-import 'package:collection/collection.dart' show IterableExtension;
 
 class ReusableVideoListController {
   final List<BetterPlayerController> _betterPlayerControllerRegistry = [];
@@ -16,9 +15,13 @@ class ReusableVideoListController {
   }
 
   BetterPlayerController? getBetterPlayerController() {
-    final freeController = _betterPlayerControllerRegistry.firstWhereOrNull(
-      (controller) => !_usedBetterPlayerControllerRegistry.contains(controller),
-    );
+    BetterPlayerController? freeController;
+    for (final controller in _betterPlayerControllerRegistry) {
+      if (!_usedBetterPlayerControllerRegistry.contains(controller)) {
+        freeController = controller;
+        break;
+      }
+    }
 
     if (freeController != null) {
       _usedBetterPlayerControllerRegistry.add(freeController);

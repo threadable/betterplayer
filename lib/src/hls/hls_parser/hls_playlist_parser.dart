@@ -18,7 +18,7 @@ import 'package:threadable_better_player/src/hls/hls_parser/segment.dart';
 import 'package:threadable_better_player/src/hls/hls_parser/util.dart';
 import 'package:threadable_better_player/src/hls/hls_parser/variant.dart';
 import 'package:threadable_better_player/src/hls/hls_parser/variant_info.dart';
-import 'package:collection/collection.dart' show IterableExtension;
+import 'package:threadable_better_player/src/core/iterable_utils.dart';
 
 class HlsPlaylistParser {
   HlsPlaylistParser(this.masterPlaylist);

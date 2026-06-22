@@ -1,6 +1,7 @@
 import 'package:threadable_better_player/threadable_better_player.dart';
 import 'package:threadable_better_player_example/constants.dart';
 import 'package:threadable_better_player_example/utils.dart';
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 
 class SubtitlesPage extends StatefulWidget {
@@ -30,7 +31,7 @@ class _SubtitlesPageState extends State<SubtitlesPage> {
     _betterPlayerController = BetterPlayerController(betterPlayerConfiguration);
     _betterPlayerController.addEventsListener((event) {
       if (event.betterPlayerEventType == BetterPlayerEventType.progress) {
-        print(
+        developer.log(
           "Current subtitle line: ${_betterPlayerController.renderedSubtitle}",
         );
       }

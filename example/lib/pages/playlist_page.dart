@@ -1,6 +1,7 @@
 import 'package:threadable_better_player/threadable_better_player.dart';
 import 'package:threadable_better_player_example/constants.dart';
 import 'package:threadable_better_player_example/utils.dart';
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -109,7 +110,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    print(
+                    developer.log(
                       "Currently playing video: ${_betterPlayerPlaylistController!.currentDataSourceIndex}",
                     );
                   },

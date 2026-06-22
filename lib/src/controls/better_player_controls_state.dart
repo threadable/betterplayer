@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:threadable_better_player/threadable_better_player.dart';
 import 'package:threadable_better_player/src/controls/better_player_clickable_widget.dart';
 import 'package:threadable_better_player/src/core/better_player_utils.dart';
-import 'package:collection/collection.dart' show IterableExtension;
+import 'package:threadable_better_player/src/core/iterable_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 

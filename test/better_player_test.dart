@@ -1,15 +1,10 @@
 import 'package:threadable_better_player/threadable_better_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 import 'better_player_mock_controller.dart';
 import 'better_player_test_utils.dart';
 
 void main() {
-  setUpAll(() {
-    VisibilityDetectorController.instance.updateInterval = Duration.zero;
-  });
-
   testWidgets("Better Player simple player - network", (
     WidgetTester tester,
   ) async {

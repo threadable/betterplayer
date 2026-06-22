@@ -1,5 +1,5 @@
 import 'package:threadable_better_player/src/hls/hls_parser/variant_info.dart';
-import 'package:collection/collection.dart';
+import 'package:threadable_better_player/src/core/iterable_utils.dart';
 
 class HlsTrackMetadataEntry {
   HlsTrackMetadataEntry({this.groupId, this.name, this.variantInfos});
@@ -20,10 +20,7 @@ class HlsTrackMetadataEntry {
     if (other is HlsTrackMetadataEntry) {
       return other.groupId == groupId &&
           other.name == name &&
-          const ListEquality<VariantInfo>().equals(
-            other.variantInfos,
-            variantInfos,
-          );
+          listEquals(other.variantInfos, variantInfos);
     }
     return false;
   }

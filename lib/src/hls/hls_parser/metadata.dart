@@ -1,5 +1,5 @@
 import 'package:threadable_better_player/src/hls/hls_parser/hls_track_metadata_entry.dart';
-import 'package:collection/collection.dart';
+import 'package:threadable_better_player/src/core/iterable_utils.dart';
 
 class Metadata {
   Metadata(this.list);
@@ -9,10 +9,7 @@ class Metadata {
   @override
   bool operator ==(Object other) {
     if (other is Metadata) {
-      return const ListEquality<HlsTrackMetadataEntry>().equals(
-        other.list,
-        list,
-      );
+      return listEquals(other.list, list);
     }
     return false;
   }

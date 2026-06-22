@@ -2,16 +2,11 @@ import 'package:threadable_better_player/threadable_better_player.dart';
 import 'package:threadable_better_player/src/core/better_player_with_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 
 import 'better_player_mock_controller.dart';
 
 void main() {
   late BetterPlayerMockController mockController;
-
-  setUpAll(() {
-    VisibilityDetectorController.instance.updateInterval = Duration.zero;
-  });
 
   setUp(() {
     mockController = BetterPlayerMockController(
