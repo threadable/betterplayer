@@ -104,3 +104,7 @@ and iOS 14+.
 The iOS implementation is vendored into `ios/threadable_better_player` as a
 self-contained Swift package, so the plugin no longer depends on third-party
 iOS pods.
+
+The example app still uses Flutter's standard iOS project scaffolding, which
+includes the generated CocoaPods/Xcode integration that Flutter itself
+manages.

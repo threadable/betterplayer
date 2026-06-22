@@ -1,6 +1,3 @@
-#
-# To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html
-#
 Pod::Spec.new do |s|
   s.name             = 'threadable_better_player'
   s.version          = '2.2.0'
@@ -12,6 +9,9 @@ Advanced video player for Flutter, forked from Better Player with Threadable-mai
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Threadable' => 'padraig@threadable.io' }
   s.source           = { :path => '.' }
+  # This podspec remains as Flutter's iOS plugin shim. The native
+  # implementation is vendored into ios/threadable_better_player as a
+  # self-contained Swift package.
   s.source_files = 'threadable_better_player/Sources/**/*'
   s.public_header_files = 'threadable_better_player/Sources/**/*.h'
 
