@@ -12,7 +12,7 @@ let package = Package(
         .library(
             name: "threadable-better-player",
             type: .static,
-            targets: ["threadable_better_player"]
+            targets: ["threadable_better_player_objc"]
         )
     ],
     dependencies: [
@@ -55,23 +55,33 @@ let package = Package(
             path: "Sources/HLSCachingReverseProxyServer"
         ),
         .target(
-            name: "threadable_better_player_swift",
+            name: "threadable_better_player",
             dependencies: [
                 "Cache",
                 "GCDWebServer",
                 "PINCache",
-                "HLSCachingReverseProxyServer"
+                "HLSCachingReverseProxyServer",
+                .product(name: "FlutterFramework", package: "FlutterFramework")
             ],
-            path: "Sources/threadable_better_player_swift"
+            path: "Sources/threadable_better_player"
         ),
         .target(
-            name: "threadable_better_player",
+            name: "threadable_better_player_objc",
             dependencies: [
-                "FlutterFramework",
-                "threadable_better_player_swift"
+                "threadable_better_player",
+                .product(name: "FlutterFramework", package: "FlutterFramework")
             ],
-            path: "Sources/threadable_better_player",
-            publicHeadersPath: "include"
+            path: "Sources/threadable_better_player_objc",
+            publicHeadersPath: "include",
+            cSettings: [
+                .headerSearchPath("include")
+            ],
+            linkerSettings: [
+                .linkedFramework("AVFoundation"),
+                .linkedFramework("AVKit"),
+                .linkedFramework("UIKit"),
+                .linkedFramework("Foundation")
+            ]
         )
     ]
 )
