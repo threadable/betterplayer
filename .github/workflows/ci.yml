@@ -9,23 +9,29 @@ jobs:
   check-format:
     name: Check format using flutter format
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/cirruslabs/flutter:3.44.2
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.2
       - name: Check format
         run: dart format --set-exit-if-changed .
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/cirruslabs/flutter:3.44.2
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.2
       - name: Get dependencies
         run: flutter pub get
       - name: Get dependencies for example
@@ -37,12 +43,15 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/cirruslabs/flutter:3.44.2
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.2
       - name: Get dependencies
         run: flutter pub get
       - name: Test using flutter test
