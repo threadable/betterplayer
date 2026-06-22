@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #import "BetterPlayer.h"
-@import threadable_better_player;
 
 static void* timeRangeContext = &timeRangeContext;
 static void* statusContext = &statusContext;

@@ -4,7 +4,7 @@ version: 2.2.0
 homepage: https://github.com/threadable/betterplayer
 
 environment:
-  sdk: ">=3.12.2 <4.0.0"
+  sdk: ">=3.12.0 <4.0.0"
   flutter: ">=3.44.0"
 
 dependencies:
@@ -14,7 +14,7 @@ dependencies:
   flutter_widget_from_html_core: ^0.17.2
   visibility_detector: ^0.4.0+2
   path_provider: ^2.1.6
-  xml: ^7.0.0
+  xml: ^7.0.1
   wakelock_plus: ^1.6.1
 
 dev_dependencies:
