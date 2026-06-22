@@ -99,11 +99,10 @@ some feature which is supported by other players available in pub dev, then feel
 
 ## Compatibility
 This fork targets modern Flutter toolchains and currently supports Android 26+
-and iOS 14+.
+and iOS 12+.
 
-The iOS implementation is vendored into `ios/threadable_better_player` as a
-self-contained Swift package, so the plugin no longer depends on third-party
-iOS pods.
+iOS is now Swift Package Manager only. CocoaPods support has been removed, so
+consumers must use a Flutter version that supports SwiftPM plugin integration.
 
-The example app uses Flutter's standard iOS project scaffolding and the
-generated Swift Package Manager integration that Flutter itself manages.
+Projects should not manually add this plugin as a local Swift package in Xcode.
+Flutter should manage the SwiftPM integration and plugin registration.
