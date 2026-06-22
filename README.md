@@ -97,4 +97,10 @@ This plugin is based on [Chewie](https://github.com/brianegan/chewie). Chewie is
 This plugin development is in progress. You may encounter breaking changes each version. This plugin is developed part-time for free. If you need
 some feature which is supported by other players available in pub dev, then feel free to create PR. All valuable contributions are welcome!
 
+## Compatibility
+This fork targets modern Flutter toolchains and currently supports Android 26+
+and iOS 14+.
 
+The iOS implementation is vendored into `ios/threadable_better_player` as a
+self-contained Swift package, so the plugin no longer depends on third-party
+iOS pods.

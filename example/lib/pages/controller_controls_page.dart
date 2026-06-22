@@ -3,6 +3,8 @@ import 'package:threadable_better_player_example/constants.dart';
 import 'package:flutter/material.dart';
 
 class ControllerControlsPage extends StatefulWidget {
+  const ControllerControlsPage({super.key});
+
   @override
   _ControllerControlsPageState createState() => _ControllerControlsPageState();
 }
@@ -45,12 +47,12 @@ class _ControllerControlsPageState extends State<ControllerControlsPage> {
           Wrap(
             children: [
               TextButton(
-                child: Text("Play"),
                 onPressed: _betterPlayerController.play,
+                child: Text("Play"),
               ),
               TextButton(
-                child: Text("Pause"),
                 onPressed: _betterPlayerController.pause,
+                child: Text("Pause"),
               ),
               TextButton(
                 child: Text("Hide controls"),

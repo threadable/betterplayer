@@ -3,6 +3,8 @@ import 'package:threadable_better_player_example/constants.dart';
 import 'package:flutter/material.dart';
 
 class HlsAudioPage extends StatefulWidget {
+  const HlsAudioPage({super.key});
+
   @override
   _HlsAudioPageState createState() => _HlsAudioPageState();
 }

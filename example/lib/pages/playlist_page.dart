@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class PlaylistPage extends StatefulWidget {
+  const PlaylistPage({super.key});
+
   @override
   _PlaylistPageState createState() => _PlaylistPageState();
 }
@@ -12,7 +14,7 @@ class PlaylistPage extends StatefulWidget {
 class _PlaylistPageState extends State<PlaylistPage> {
   final GlobalKey<BetterPlayerPlaylistState> _betterPlayerPlaylistStateKey =
       GlobalKey();
-  List<BetterPlayerDataSource> _dataSourceList = [];
+  final List<BetterPlayerDataSource> _dataSourceList = [];
   late BetterPlayerConfiguration _betterPlayerConfiguration;
   late BetterPlayerPlaylistConfiguration _betterPlayerPlaylistConfiguration;
 
@@ -84,6 +86,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
                   ),
                 ),
                 AspectRatio(
+                  aspectRatio: 1,
                   child: BetterPlayerPlaylist(
                     key: _betterPlayerPlaylistStateKey,
                     betterPlayerConfiguration: _betterPlayerConfiguration,
@@ -91,7 +94,6 @@ class _PlaylistPageState extends State<PlaylistPage> {
                         _betterPlayerPlaylistConfiguration,
                     betterPlayerDataSourceList: snapshot.data!,
                   ),
-                  aspectRatio: 1,
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -108,10 +110,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
                 ElevatedButton(
                   onPressed: () {
                     print(
-                      "Currently playing video: " +
-                          _betterPlayerPlaylistController!
-                              .currentDataSourceIndex
-                              .toString(),
+                      "Currently playing video: ${_betterPlayerPlaylistController!.currentDataSourceIndex}",
                     );
                   },
                   child: Text("Check currently playing video index"),

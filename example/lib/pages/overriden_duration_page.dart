@@ -3,6 +3,8 @@ import 'package:threadable_better_player_example/constants.dart';
 import 'package:flutter/material.dart';
 
 class OverriddenDurationPage extends StatefulWidget {
+  const OverriddenDurationPage({super.key});
+
   @override
   _OverriddenDurationPageState createState() => _OverriddenDurationPageState();
 }

@@ -6,8 +6,8 @@ import 'variant.dart';
 
 class HlsMasterPlaylist extends HlsPlaylist {
   HlsMasterPlaylist({
-    String? baseUri,
-    List<String> tags = const [], // ignore: always_specify_types
+    super.baseUri,
+    super.tags = const [], // ignore: always_specify_types
     this.variants = const [], // ignore: always_specify_types
     this.videos = const [], // ignore: always_specify_types
     this.audios = const [], // ignore: always_specify_types
@@ -15,7 +15,7 @@ class HlsMasterPlaylist extends HlsPlaylist {
     this.closedCaptions = const [], // ignore: always_specify_types
     this.muxedAudioFormat,
     this.muxedCaptionFormats = const [], // ignore: always_specify_types
-    bool hasIndependentSegments = false,
+    super.hasIndependentSegments = false,
     this.variableDefinitions = const {}, // ignore: always_specify_types
     this.sessionKeyDrmInitData = const [], // ignore: always_specify_types
   }) : mediaPlaylistUrls = _getMediaPlaylistUrls(variants, [
@@ -23,13 +23,7 @@ class HlsMasterPlaylist extends HlsPlaylist {
          audios,
          subtitles,
          closedCaptions,
-       ]),
-       // ignore: always_specify_types
-       super(
-         baseUri: baseUri,
-         tags: tags,
-         hasIndependentSegments: hasIndependentSegments,
-       );
+       ]);
 
   /// All of the media playlist URLs referenced by the playlist.
   final List<Uri?> mediaPlaylistUrls;

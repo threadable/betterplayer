@@ -3,6 +3,8 @@ import 'package:threadable_better_player_example/constants.dart';
 import 'package:flutter/material.dart';
 
 class ControlsConfigurationPage extends StatefulWidget {
+  const ControlsConfigurationPage({super.key});
+
   @override
   _ControlsConfigurationPageState createState() =>
       _ControlsConfigurationPageState();

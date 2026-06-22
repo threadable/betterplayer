@@ -112,7 +112,7 @@ class BetterPlayerHlsUtils {
     Rendition rendition,
   ) async {
     try {
-      final HlsPlaylistParser _hlsPlaylistParser = HlsPlaylistParser.create();
+      final HlsPlaylistParser hlsPlaylistParser = HlsPlaylistParser.create();
       final subtitleData = await BetterPlayerAsmsUtils.getDataFromUrl(
         rendition.url.toString(),
       );
@@ -120,7 +120,7 @@ class BetterPlayerHlsUtils {
         return null;
       }
 
-      final parsedSubtitle = await _hlsPlaylistParser.parseString(
+      final parsedSubtitle = await hlsPlaylistParser.parseString(
         rendition.url,
         subtitleData,
       );

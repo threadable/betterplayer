@@ -1,3 +1,5 @@
+// ignore_for_file: dead_code
+
 import 'dart:async';
 import 'dart:io';
 import 'package:threadable_better_player/threadable_better_player.dart';
@@ -215,7 +217,7 @@ class BetterPlayerController {
     this.betterPlayerPlaylistConfiguration,
     BetterPlayerDataSource? betterPlayerDataSource,
   }) {
-    this._betterPlayerControlsConfiguration =
+    _betterPlayerControlsConfiguration =
         betterPlayerConfiguration.controlsConfiguration;
     _eventListeners.add(eventListener);
     if (betterPlayerDataSource != null) {
@@ -312,18 +314,18 @@ class BetterPlayerController {
       _getHeaders(),
     );
     if (data != null) {
-      final BetterPlayerAsmsDataHolder _response =
+      final BetterPlayerAsmsDataHolder response =
           await BetterPlayerAsmsUtils.parse(data, betterPlayerDataSource!.url);
 
       /// Load tracks
       if (_betterPlayerDataSource?.useAsmsTracks == true) {
-        _betterPlayerAsmsTracks = _response.tracks ?? [];
+        _betterPlayerAsmsTracks = response.tracks ?? [];
       }
 
       /// Load subtitles
       if (betterPlayerDataSource?.useAsmsSubtitles == true) {
         final List<BetterPlayerAsmsSubtitle> asmsSubtitles =
-            _response.subtitles ?? [];
+            response.subtitles ?? [];
         asmsSubtitles.forEach((BetterPlayerAsmsSubtitle asmsSubtitle) {
           _betterPlayerSubtitlesSourceList.add(
             BetterPlayerSubtitlesSource(
@@ -342,7 +344,7 @@ class BetterPlayerController {
       ///Load audio tracks
       if (betterPlayerDataSource?.useAsmsAudioTracks == true &&
           _isDataSourceAsms(betterPlayerDataSource!)) {
-        _betterPlayerAsmsAudioTracks = _response.audios ?? [];
+        _betterPlayerAsmsAudioTracks = response.audios ?? [];
         if (_betterPlayerAsmsAudioTracks?.isNotEmpty == true) {
           setAudioTrack(_betterPlayerAsmsAudioTracks!.first);
         }
@@ -900,10 +902,10 @@ class BetterPlayerController {
       }
 
       _nextVideoTimer = Timer.periodic(const Duration(milliseconds: 1000), (
-        _timer,
+        timer,
       ) async {
         if (_nextVideoTime == 1) {
-          _timer.cancel();
+          timer.cancel();
           _nextVideoTimer = null;
         }
         if (_nextVideoTime != null) {
@@ -1337,7 +1339,7 @@ class BetterPlayerController {
   void setBetterPlayerControlsConfiguration(
     BetterPlayerControlsConfiguration betterPlayerControlsConfiguration,
   ) {
-    this._betterPlayerControlsConfiguration = betterPlayerControlsConfiguration;
+    _betterPlayerControlsConfiguration = betterPlayerControlsConfiguration;
   }
 
   /// Add controller internal event.

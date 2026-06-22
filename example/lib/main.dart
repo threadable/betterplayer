@@ -20,16 +20,15 @@ void main() {
     return true;
   };
 
-  runZonedGuarded(
-    () => runApp(MyApp()),
-    (Object error, StackTrace stack) {
-      debugPrint('Uncaught async error in example app: $error');
-      debugPrintStack(stackTrace: stack);
-    },
-  );
+  runZonedGuarded(() => runApp(MyApp()), (Object error, StackTrace stack) {
+    debugPrint('Uncaught async error in example app: $error');
+    debugPrintStack(stackTrace: stack);
+  });
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Shortcuts(

@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #import "BetterPlayer.h"
-#import <threadable_better_player/threadable_better_player-Swift.h>
+#import <threadable_better_player_swift/threadable_better_player_swift-Swift.h>
 
 static void* timeRangeContext = &timeRangeContext;
 static void* statusContext = &statusContext;
@@ -138,6 +138,35 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     // Output degrees in between [0, 360[
     return degrees;
 };
+
+static UIViewController* BetterPlayerRootViewController(void) {
+    if (@available(iOS 13.0, *)) {
+        NSSet<UIScene*>* scenes = [UIApplication sharedApplication].connectedScenes;
+        for (UIScene* scene in scenes) {
+            if (scene.activationState != UISceneActivationStateForegroundActive) {
+                continue;
+            }
+
+            if (![scene isKindOfClass:[UIWindowScene class]]) {
+                continue;
+            }
+
+            UIWindowScene* windowScene = (UIWindowScene*)scene;
+            for (UIWindow* window in windowScene.windows) {
+                if (window.isKeyWindow) {
+                    return window.rootViewController;
+                }
+            }
+
+            UIWindow* firstWindow = windowScene.windows.firstObject;
+            if (firstWindow != nil) {
+                return firstWindow.rootViewController;
+            }
+        }
+    }
+
+    return nil;
+}
 
 - (AVMutableVideoComposition*)getVideoCompositionWithTransform:(CGAffineTransform)transform
                                                      withAsset:(AVAsset*)asset
@@ -639,12 +668,14 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     {
         // Create new controller passing reference to the AVPlayerLayer
         self._playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
-        UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
+        UIViewController* vc = BetterPlayerRootViewController();
         self._playerLayer.frame = frame;
         self._playerLayer.needsDisplayOnBoundsChange = YES;
         //  [self._playerLayer addObserver:self forKeyPath:readyForDisplayKeyPath options:NSKeyValueObservingOptionNew context:nil];
-        [vc.view.layer addSublayer:self._playerLayer];
-        vc.view.layer.needsDisplayOnBoundsChange = YES;
+        if (vc != nil) {
+            [vc.view.layer addSublayer:self._playerLayer];
+            vc.view.layer.needsDisplayOnBoundsChange = YES;
+        }
         if (@available(iOS 9.0, *)) {
             _pipController = NULL;
         }

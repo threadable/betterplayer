@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 class BetterPlayerWithControls extends StatefulWidget {
   final BetterPlayerController? controller;
 
-  const BetterPlayerWithControls({Key? key, this.controller}) : super(key: key);
+  const BetterPlayerWithControls({super.key, this.controller});
 
   @override
   _BetterPlayerWithControlsState createState() =>
@@ -217,11 +217,7 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
 
 ///Widget used to set the proper box fit of the video. Default fit is 'fill'.
 class _BetterPlayerVideoFitWidget extends StatefulWidget {
-  const _BetterPlayerVideoFitWidget(
-    this.betterPlayerController,
-    this.boxFit, {
-    Key? key,
-  }) : super(key: key);
+  const _BetterPlayerVideoFitWidget(this.betterPlayerController, this.boxFit);
 
   final BetterPlayerController betterPlayerController;
   final BoxFit boxFit;

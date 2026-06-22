@@ -7,12 +7,14 @@ import 'package:flutter/material.dart';
 import 'video_list_widget.dart';
 
 class VideoListPage extends StatefulWidget {
+  const VideoListPage({super.key});
+
   @override
   _VideoListPageState createState() => _VideoListPageState();
 }
 
 class _VideoListPageState extends State<VideoListPage> {
-  final _random = new Random();
+  final _random = Random();
   final List<String> _videos = [
     Constants.bugBuckBunnyVideoUrl,
     Constants.forBiggerBlazesUrl,

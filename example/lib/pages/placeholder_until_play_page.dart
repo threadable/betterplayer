@@ -5,6 +5,8 @@ import 'package:threadable_better_player_example/constants.dart';
 import 'package:flutter/material.dart';
 
 class PlaceholderUntilPlayPage extends StatefulWidget {
+  const PlaceholderUntilPlayPage({super.key});
+
   @override
   _PlaceholderUntilPlayPageState createState() =>
       _PlaceholderUntilPlayPageState();
@@ -12,7 +14,7 @@ class PlaceholderUntilPlayPage extends StatefulWidget {
 
 class _PlaceholderUntilPlayPageState extends State<PlaceholderUntilPlayPage> {
   late BetterPlayerController _betterPlayerController;
-  StreamController<bool> _placeholderStreamController =
+  final StreamController<bool> _placeholderStreamController =
       StreamController.broadcast();
   bool _showPlaceholder = true;
 

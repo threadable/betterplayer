@@ -7,6 +7,8 @@ import 'package:threadable_better_player_example/constants.dart';
 import 'package:threadable_better_player_example/utils.dart';
 
 class ClearKeyPage extends StatefulWidget {
+  const ClearKeyPage({super.key});
+
   @override
   State<StatefulWidget> createState() => _ClearKeyState();
 }
@@ -38,7 +40,7 @@ class _ClearKeyState extends State<ClearKeyPage> {
   }
 
   void _setupDataSources() async {
-    var _clearKeyDataSourceFile = BetterPlayerDataSource(
+    var clearKeyDataSourceFile = BetterPlayerDataSource(
       BetterPlayerDataSourceType.file,
       await Utils.getFileUrl(Constants.fileTestVideoEncryptUrl),
       drmConfiguration: BetterPlayerDrmConfiguration(
@@ -52,9 +54,9 @@ class _ClearKeyState extends State<ClearKeyPage> {
       ),
     );
 
-    _clearKeyControllerFile.setupDataSource(_clearKeyDataSourceFile);
+    _clearKeyControllerFile.setupDataSource(clearKeyDataSourceFile);
 
-    BetterPlayerDataSource _clearKeyDataSourceBroken = BetterPlayerDataSource(
+    BetterPlayerDataSource clearKeyDataSourceBroken = BetterPlayerDataSource(
       BetterPlayerDataSourceType.file,
       await Utils.getFileUrl(Constants.fileTestVideoEncryptUrl),
       drmConfiguration: BetterPlayerDrmConfiguration(
@@ -68,9 +70,9 @@ class _ClearKeyState extends State<ClearKeyPage> {
       ),
     );
 
-    _clearKeyControllerBroken.setupDataSource(_clearKeyDataSourceBroken);
+    _clearKeyControllerBroken.setupDataSource(clearKeyDataSourceBroken);
 
-    var _clearKeyDataSourceNetwork = BetterPlayerDataSource(
+    var clearKeyDataSourceNetwork = BetterPlayerDataSource(
       BetterPlayerDataSourceType.network,
       Constants.networkTestVideoEncryptUrl,
       drmConfiguration: BetterPlayerDrmConfiguration(
@@ -84,9 +86,9 @@ class _ClearKeyState extends State<ClearKeyPage> {
       ),
     );
 
-    _clearKeyControllerNetwork.setupDataSource(_clearKeyDataSourceNetwork);
+    _clearKeyControllerNetwork.setupDataSource(clearKeyDataSourceNetwork);
 
-    var _clearKeyDataSourceMemory = BetterPlayerDataSource(
+    var clearKeyDataSourceMemory = BetterPlayerDataSource(
       BetterPlayerDataSourceType.memory,
       "",
       bytes: File(
@@ -103,7 +105,7 @@ class _ClearKeyState extends State<ClearKeyPage> {
       ),
     );
 
-    _clearKeyControllerMemory.setupDataSource(_clearKeyDataSourceMemory);
+    _clearKeyControllerMemory.setupDataSource(clearKeyDataSourceMemory);
   }
 
   @override

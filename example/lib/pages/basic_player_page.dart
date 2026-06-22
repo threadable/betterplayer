@@ -4,6 +4,8 @@ import 'package:threadable_better_player_example/utils.dart';
 import 'package:flutter/material.dart';
 
 class BasicPlayerPage extends StatefulWidget {
+  const BasicPlayerPage({super.key});
+
   @override
   _BasicPlayerPageState createState() => _BasicPlayerPageState();
 }
@@ -17,10 +19,7 @@ class _BasicPlayerPageState extends State<BasicPlayerPage> {
     super.initState();
 
     _networkController = BetterPlayerController(
-      const BetterPlayerConfiguration(
-        aspectRatio: 16 / 9,
-        autoPlay: true,
-      ),
+      const BetterPlayerConfiguration(aspectRatio: 16 / 9, autoPlay: true),
     );
 
     _networkController.addEventsListener((event) {
@@ -43,10 +42,7 @@ class _BasicPlayerPageState extends State<BasicPlayerPage> {
       BetterPlayerDataSource(
         BetterPlayerDataSourceType.network,
         Constants.bugBuckBunnyVideoUrl,
-        headers: const {
-          'User-Agent': 'Mozilla/5.0',
-          'Accept': '*/*',
-        },
+        headers: const {'User-Agent': 'Mozilla/5.0', 'Accept': '*/*'},
       ),
     );
   }

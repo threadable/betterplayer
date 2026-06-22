@@ -3,6 +3,8 @@ import 'package:threadable_better_player/threadable_better_player.dart';
 import 'package:threadable_better_player_example/constants.dart';
 
 class CastingPage extends StatefulWidget {
+  const CastingPage({super.key});
+
   @override
   _CastingPageState createState() => _CastingPageState();
 }

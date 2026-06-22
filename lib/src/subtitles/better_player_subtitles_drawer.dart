@@ -11,12 +11,12 @@ class BetterPlayerSubtitlesDrawer extends StatefulWidget {
   final Stream<bool> playerVisibilityStream;
 
   const BetterPlayerSubtitlesDrawer({
-    Key? key,
+    super.key,
     required this.subtitles,
     required this.betterPlayerController,
     this.betterPlayerSubtitlesConfiguration,
     required this.playerVisibilityStream,
-  }) : super(key: key);
+  });
 
   @override
   _BetterPlayerSubtitlesDrawerState createState() =>

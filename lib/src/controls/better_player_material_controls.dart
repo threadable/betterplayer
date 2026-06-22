@@ -20,10 +20,10 @@ class BetterPlayerMaterialControls extends StatefulWidget {
   final BetterPlayerControlsConfiguration controlsConfiguration;
 
   const BetterPlayerMaterialControls({
-    Key? key,
+    super.key,
     required this.onControlsVisibilityChanged,
     required this.controlsConfiguration,
-  }) : super(key: key);
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -122,12 +122,12 @@ class _BetterPlayerMaterialControlsState
 
   @override
   void didChangeDependencies() {
-    final _oldController = _betterPlayerController;
+    final oldController = _betterPlayerController;
     _betterPlayerController = BetterPlayerController.of(context);
     _controller = _betterPlayerController!.videoPlayerController;
     _latestValue = _controller!.value;
 
-    if (_oldController != _betterPlayerController) {
+    if (oldController != _betterPlayerController) {
       _dispose();
       _initialize();
     }

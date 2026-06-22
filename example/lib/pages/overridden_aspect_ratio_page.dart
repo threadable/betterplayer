@@ -3,6 +3,8 @@ import 'package:threadable_better_player_example/constants.dart';
 import 'package:flutter/material.dart';
 
 class OverriddenAspectRatioPage extends StatefulWidget {
+  const OverriddenAspectRatioPage({super.key});
+
   @override
   _OverriddenAspectRatioPageState createState() =>
       _OverriddenAspectRatioPageState();

@@ -1,12 +1,10 @@
 plugins {
     id("com.android.library")
-    id("kotlin-android")
 }
 
 val annotationVersion = "1.10.0"
 val workVersion = "2.11.2"
 val media3Version = "1.10.0"
-val kotlinVersion = "2.2.21"
 val castFrameworkVersion = "22.3.0"
 
 android {
@@ -14,8 +12,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        multiDexEnabled = true
-        minSdk = 25
+        minSdk = 26
         targetSdk = 36
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -23,10 +20,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
     }
 
     sourceSets["main"].java.srcDirs("src/main/kotlin")
@@ -38,7 +31,6 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
     implementation("androidx.media3:media3-exoplayer:$media3Version")
     implementation("androidx.media3:media3-exoplayer-hls:$media3Version")
     implementation("androidx.media3:media3-exoplayer-dash:$media3Version")

@@ -1,8 +1,12 @@
+import 'dart:developer' as developer;
+
 // Flutter imports:
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class BetterPlayerUtils {
+  static const String _logName = 'threadable_better_player';
+
   static String formatBitrate(int bitrate) {
     if (bitrate < 1000) {
       return "$bitrate bit/s";
@@ -58,8 +62,7 @@ class BetterPlayerUtils {
 
   static void log(String logMessage) {
     if (!kReleaseMode) {
-      // ignore: avoid_print
-      print(logMessage);
+      developer.log(logMessage, name: _logName);
     }
   }
 }

@@ -3,6 +3,8 @@ import 'package:threadable_better_player_example/constants.dart';
 import 'package:flutter/material.dart';
 
 class HlsSubtitlesPage extends StatefulWidget {
+  const HlsSubtitlesPage({super.key});
+
   @override
   _HlsSubtitlesPageState createState() => _HlsSubtitlesPageState();
 }

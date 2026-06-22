@@ -422,13 +422,12 @@ void main() {
     test("startNextVideoTimer starts next video timer", () async {
       final BetterPlayerController betterPlayerMockController =
           BetterPlayerTestUtils.setupBetterPlayerMockController();
-      int eventCount = 0;
-      betterPlayerMockController.nextVideoTimeStream.listen((event) {
-        eventCount += 1;
-      });
+      final List<int?> events = <int?>[];
+      betterPlayerMockController.nextVideoTimeStream.listen(events.add);
       betterPlayerMockController.startNextVideoTimer();
       await Future.delayed(const Duration(milliseconds: 3000), () {});
-      expect(eventCount, 3);
+      expect(events.length, greaterThanOrEqualTo(3));
+      expect(events.take(3).toList(), <int?>[3, 2, 1]);
     });
   });
 }

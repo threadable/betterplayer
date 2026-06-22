@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #import "BetterPlayerPlugin.h"
-#import <threadable_better_player/threadable_better_player-Swift.h>
+#import <threadable_better_player_swift/threadable_better_player_swift-Swift.h>
 
 #if !__has_feature(objc_arc)
 #error Code Requires ARC.

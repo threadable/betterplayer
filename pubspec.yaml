@@ -1,11 +1,11 @@
 name: threadable_better_player
 description: Advanced video player maintained by Threadable with continued Flutter, iOS, and Android support.
-version: 2.1.0
+version: 2.2.0
 homepage: https://github.com/threadable/betterplayer
 
 environment:
-  sdk: ">=3.8.1 <4.0.0"
-  flutter: ">=3.32.0"
+  sdk: ">=3.12.2 <4.0.0"
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:

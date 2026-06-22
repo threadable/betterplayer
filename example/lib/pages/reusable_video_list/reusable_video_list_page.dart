@@ -7,6 +7,8 @@ import 'package:threadable_better_player_example/pages/reusable_video_list/reusa
 import 'package:flutter/material.dart';
 
 class ReusableVideoListPage extends StatefulWidget {
+  const ReusableVideoListPage({super.key});
+
   @override
   _ReusableVideoListPageState createState() => _ReusableVideoListPageState();
 }
@@ -14,7 +16,7 @@ class ReusableVideoListPage extends StatefulWidget {
 class _ReusableVideoListPageState extends State<ReusableVideoListPage> {
   ReusableVideoListController videoListController =
       ReusableVideoListController();
-  final _random = new Random();
+  final _random = Random();
   final List<String> _videos = [
     Constants.forBiggerBlazesUrl,
     Constants.forBiggerJoyridesVideoUrl,

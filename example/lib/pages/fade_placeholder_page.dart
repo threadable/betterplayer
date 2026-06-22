@@ -5,13 +5,15 @@ import 'package:threadable_better_player_example/constants.dart';
 import 'package:flutter/material.dart';
 
 class FadePlaceholderPage extends StatefulWidget {
+  const FadePlaceholderPage({super.key});
+
   @override
   _FadePlaceholderPageState createState() => _FadePlaceholderPageState();
 }
 
 class _FadePlaceholderPageState extends State<FadePlaceholderPage> {
   late BetterPlayerController _betterPlayerController;
-  StreamController<bool> _playController = StreamController.broadcast();
+  final StreamController<bool> _playController = StreamController.broadcast();
 
   @override
   void initState() {

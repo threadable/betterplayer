@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class NotificationPlayerPage extends StatefulWidget {
+  const NotificationPlayerPage({super.key});
+
   @override
   _NotificationPlayerPageState createState() => _NotificationPlayerPageState();
 }

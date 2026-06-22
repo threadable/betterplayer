@@ -11,11 +11,11 @@ class BetterPlayerPlaylist extends StatefulWidget {
   final BetterPlayerPlaylistConfiguration betterPlayerPlaylistConfiguration;
 
   const BetterPlayerPlaylist({
-    Key? key,
+    super.key,
     required this.betterPlayerDataSourceList,
     required this.betterPlayerConfiguration,
     required this.betterPlayerPlaylistConfiguration,
-  }) : super(key: key);
+  });
 
   @override
   BetterPlayerPlaylistState createState() => BetterPlayerPlaylistState();

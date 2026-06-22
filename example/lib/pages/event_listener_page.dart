@@ -5,6 +5,8 @@ import 'package:threadable_better_player_example/constants.dart';
 import 'package:flutter/material.dart';
 
 class EventListenerPage extends StatefulWidget {
+  const EventListenerPage({super.key});
+
   @override
   _EventListenerPageState createState() => _EventListenerPageState();
 }
@@ -12,7 +14,7 @@ class EventListenerPage extends StatefulWidget {
 class _EventListenerPageState extends State<EventListenerPage> {
   late BetterPlayerController _betterPlayerController;
   List<BetterPlayerEvent> events = [];
-  StreamController<DateTime> _eventStreamController =
+  final StreamController<DateTime> _eventStreamController =
       StreamController.broadcast();
 
   @override

@@ -3,6 +3,8 @@ import 'package:threadable_better_player_example/constants.dart';
 import 'package:flutter/material.dart';
 
 class AutoFullscreenOrientationPage extends StatefulWidget {
+  const AutoFullscreenOrientationPage({super.key});
+
   @override
   _AutoFullscreenOrientationPageState createState() =>
       _AutoFullscreenOrientationPageState();

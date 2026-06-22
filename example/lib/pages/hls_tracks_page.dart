@@ -3,6 +3,8 @@ import 'package:threadable_better_player_example/constants.dart';
 import 'package:flutter/material.dart';
 
 class HlsTracksPage extends StatefulWidget {
+  const HlsTracksPage({super.key});
+
   @override
   _HlsTracksPageState createState() => _HlsTracksPageState();
 }

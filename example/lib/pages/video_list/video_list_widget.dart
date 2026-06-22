@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class VideoListWidget extends StatefulWidget {
   final VideoListData? videoListData;
 
-  const VideoListWidget({Key? key, this.videoListData}) : super(key: key);
+  const VideoListWidget({super.key, this.videoListData});
 
   @override
   _VideoListWidgetState createState() => _VideoListWidgetState();
@@ -43,6 +43,7 @@ class _VideoListWidgetState extends State<VideoListWidget> {
             ),
           ),
           AspectRatio(
+            aspectRatio: 1,
             child: BetterPlayerListVideoPlayer(
               BetterPlayerDataSource(
                 BetterPlayerDataSourceType.network,
@@ -69,7 +70,6 @@ class _VideoListWidgetState extends State<VideoListWidget> {
               playFraction: 0.8,
               betterPlayerListVideoPlayerController: controller,
             ),
-            aspectRatio: 1,
           ),
           Padding(
             padding: EdgeInsets.all(8),

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class NormalPlayerPage extends StatefulWidget {
+  const NormalPlayerPage({super.key});
+
   @override
   _NormalPlayerPageState createState() => _NormalPlayerPageState();
 }

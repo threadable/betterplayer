@@ -1,3 +1,5 @@
+// ignore_for_file: dead_code
+
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -662,20 +664,23 @@ class HlsPlaylistParser {
       line: line,
       pattern: regexpDefault,
       defaultValue: false,
-    ))
+    )) {
       flags |= Util.selectionFlagDefault;
+    }
     if (parseOptionalBooleanAttribute(
       line: line,
       pattern: regexpForced,
       defaultValue: false,
-    ))
+    )) {
       flags |= Util.selectionFlagForced;
+    }
     if (parseOptionalBooleanAttribute(
       line: line,
       pattern: regexpAutoSelect,
       defaultValue: false,
-    ))
+    )) {
       flags |= Util.selectionFlagAutoSelect;
+    }
     return flags;
   }
 

@@ -6,6 +6,8 @@ import 'package:threadable_better_player_example/utils.dart';
 import 'package:flutter/material.dart';
 
 class MemoryPlayerPage extends StatefulWidget {
+  const MemoryPlayerPage({super.key});
+
   @override
   _MemoryPlayerPageState createState() => _MemoryPlayerPageState();
 }

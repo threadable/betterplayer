@@ -4,6 +4,8 @@ import 'package:threadable_better_player_example/utils.dart';
 import 'package:flutter/material.dart';
 
 class SubtitlesPage extends StatefulWidget {
+  const SubtitlesPage({super.key});
+
   @override
   _SubtitlesPageState createState() => _SubtitlesPageState();
 }
@@ -29,8 +31,7 @@ class _SubtitlesPageState extends State<SubtitlesPage> {
     _betterPlayerController.addEventsListener((event) {
       if (event.betterPlayerEventType == BetterPlayerEventType.progress) {
         print(
-          "Current subtitle line: " +
-              _betterPlayerController.renderedSubtitle.toString(),
+          "Current subtitle line: ${_betterPlayerController.renderedSubtitle}",
         );
       }
     });
