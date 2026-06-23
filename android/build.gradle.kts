@@ -13,7 +13,6 @@ android {
 
     defaultConfig {
         minSdk = 26
-        targetSdk = 36
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -23,6 +22,12 @@ android {
     }
 
     sourceSets["main"].java.srcDirs("src/main/kotlin")
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
 }
 
 repositories {
