@@ -25,7 +25,7 @@ android {
 
     defaultConfig {
         applicationId = "io.threadable.betterplayer.example"
-        minSdk = 25
+        minSdk = 26
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -37,6 +37,12 @@ android {
         named("release") {
             signingConfig = signingConfigs.getByName("debug")
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 
