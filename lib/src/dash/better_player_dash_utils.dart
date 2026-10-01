@@ -108,7 +108,8 @@ class BetterPlayerDashUtils {
     String? url = node
         .getElement('Representation')
         ?.getElement('BaseURL')
-        ?.value;
+        ?.innerText
+        .trim();
     if (url?.contains("http") == false) {
       final Uri masterPlaylistUri = Uri.parse(masterPlaylistUrl);
       final pathSegments = <String>[...masterPlaylistUri.pathSegments];
