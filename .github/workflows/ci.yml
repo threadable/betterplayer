@@ -8,7 +8,7 @@ on:
 jobs:
   check-format:
     name: Check format using flutter format
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout code
@@ -24,7 +24,7 @@ jobs:
         run: dart format --set-exit-if-changed .
   lint:
     name: Lint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout code
@@ -44,7 +44,7 @@ jobs:
 
   test:
     name: Test
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout code
