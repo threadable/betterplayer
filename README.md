@@ -99,7 +99,7 @@ some feature which is supported by other players available in pub dev, then feel
 
 ## Compatibility
 This fork targets modern Flutter toolchains and currently supports Android 26+
-and iOS 12+.
+and iOS 15+.
 
 iOS is now Swift Package Manager only. CocoaPods support has been removed, so
 consumers must use a Flutter version that supports SwiftPM plugin integration.

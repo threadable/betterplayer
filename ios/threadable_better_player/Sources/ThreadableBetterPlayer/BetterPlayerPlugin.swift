@@ -255,10 +255,7 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
         }
 
         if players.isEmpty {
-            try? AVAudioSession.sharedInstance().setActive(
-                false,
-                options: .notifyOthersOnDeactivation
-            )
+            BetterPlayerAudioSession.deactivate(notifyOthers: true)
         }
         result(nil)
     }
@@ -327,13 +324,13 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
     }
 
     private func setRemoteCommandsNotificationActive() {
-        try? AVAudioSession.sharedInstance().setActive(true)
+        BetterPlayerAudioSession.activate()
         UIApplication.shared.beginReceivingRemoteControlEvents()
     }
 
     private func setRemoteCommandsNotificationNotActive() {
         if players.isEmpty {
-            try? AVAudioSession.sharedInstance().setActive(false)
+            BetterPlayerAudioSession.deactivate()
         }
         UIApplication.shared.endReceivingRemoteControlEvents()
     }

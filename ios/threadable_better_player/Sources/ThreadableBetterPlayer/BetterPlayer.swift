@@ -632,7 +632,7 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
         guard #available(iOS 9.0, *) else {
             return
         }
-        try? AVAudioSession.sharedInstance().setActive(true)
+        BetterPlayerAudioSession.activate()
         UIApplication.shared.beginReceivingRemoteControlEvents()
         if pipController == nil,
            let playerLayer,

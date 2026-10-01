@@ -232,16 +232,14 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
     double? width,
     double? height,
   ) async {
-    return _channel.invokeMethod<void>(
-      'enablePictureInPicture',
-      <String, dynamic>{
-        'textureId': textureId,
-        'top': top,
-        'left': left,
-        'width': width,
-        'height': height,
-      },
-    );
+    return _channel
+        .invokeMethod<void>('enablePictureInPicture', <String, dynamic>{
+          'textureId': textureId,
+          'top': top,
+          'left': left,
+          'width': width,
+          'height': height,
+        });
   }
 
   @override

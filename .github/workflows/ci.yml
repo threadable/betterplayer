@@ -17,7 +17,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.44.2
+          flutter-version: 3.47.0
       - name: Check format
         run: dart format --set-exit-if-changed .
   lint:
@@ -31,7 +31,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.44.2
+          flutter-version: 3.47.0
       - name: Get dependencies
         run: flutter pub get
       - name: Get dependencies for example
@@ -51,7 +51,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.44.2
+          flutter-version: 3.47.0
       - name: Get dependencies
         run: flutter pub get
       - name: Test using flutter test

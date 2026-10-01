@@ -1,3 +1,7 @@
+## 3.0.0
+- Breaking: Raised the minimum supported iOS version to 15.0.
+- Fixed AVAudioSession activation and deactivation on the main thread.
+
 ## 2.2.0
 - Breaking: iOS support is now Swift Package Manager only. CocoaPods support
   and the Objective-C iOS implementation have been removed. Consumers must use

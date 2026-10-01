@@ -21,7 +21,7 @@ import 'package:better_player/better_player.dart';
 
 4. (Required) iOS configuration 
    You need to change these settings in order to run Better Player on iOS:
-* Set deployment info of your project to **min. iOS 11.0 version**.
+* Set deployment info of your project to **min. iOS 15.0 version**.
 * Set Swift 5 version.
 
 5. (Required) Android configuration. 
