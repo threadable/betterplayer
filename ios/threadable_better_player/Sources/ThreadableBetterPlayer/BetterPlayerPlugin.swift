@@ -12,10 +12,12 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
     private var dataSourceDict: [Int64: [String: Any]] = [:]
     private var timeObserverIdDict: [Int64: Any] = [:]
     private var artworkImageDict: [Int64: MPMediaItemArtwork] = [:]
+    private var artworkLoadingGeneration: [Int64: UInt64] = [:]
     private let cacheManager = CacheManager()
     private var texturesCount: Int64 = -1
     private weak var notificationPlayer: BetterPlayer?
     private var remoteCommandsInitialized = false
+    private var nowPlayingGeneration: UInt64 = 0
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(
@@ -36,6 +38,7 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
 
     public func detachFromEngine(for registrar: FlutterPluginRegistrar) {
         for player in players.values {
+            disposeNotificationData(player)
             player.disposeSansEventChannel()
         }
         players.removeAll()
@@ -176,6 +179,7 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
         player: BetterPlayer,
         result: FlutterResult
     ) {
+        disposeNotificationData(player)
         player.clear()
 
         guard let dataSource = argsMap["dataSource"] as? [String: Any] else {
@@ -303,6 +307,8 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
     }
 
     private func setupRemoteNotification(_ player: BetterPlayer) {
+        nowPlayingGeneration &+= 1
+        let generation = nowPlayingGeneration
         notificationPlayer = player
         stopOtherUpdateListener(player)
         guard let textureId = getTextureId(player),
@@ -318,8 +324,20 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
         if showNotification {
             setRemoteCommandsNotificationActive()
             setupRemoteCommands()
-            setupRemoteCommandNotification(player, title: title, author: author, imageUrl: imageUrl)
-            setupUpdateListener(player, title: title, author: author, imageUrl: imageUrl)
+            setupRemoteCommandNotification(
+                player,
+                title: title,
+                author: author,
+                imageUrl: imageUrl,
+                generation: generation
+            )
+            setupUpdateListener(
+                player,
+                title: title,
+                author: author,
+                imageUrl: imageUrl,
+                generation: generation
+            )
         }
     }
 
@@ -371,10 +389,15 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
         return .success
     }
 
-    private func setNowPlayingInfoSafely(_ nowPlayingInfo: [String: Any]) {
-        let immutableInfo = nowPlayingInfo
-        DispatchQueue.main.async {
-            MPNowPlayingInfoCenter.default().nowPlayingInfo = immutableInfo
+    private func setNowPlayingInfoSafely(
+        _ nowPlayingInfo: [String: Any],
+        generation: UInt64
+    ) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.nowPlayingGeneration == generation else {
+                return
+            }
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
         }
     }
 
@@ -431,9 +454,28 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
         _ player: BetterPlayer,
         title: String,
         author: String,
-        imageUrl: String
+        imageUrl: String,
+        generation: UInt64
     ) {
-        guard !player.disposed else {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self, weak player] in
+                guard let self, let player else {
+                    return
+                }
+                self.setupRemoteCommandNotification(
+                    player,
+                    title: title,
+                    author: author,
+                    imageUrl: imageUrl,
+                    generation: generation
+                )
+            }
+            return
+        }
+
+        guard generation == nowPlayingGeneration,
+              notificationPlayer === player,
+              !player.disposed else {
             return
         }
 
@@ -446,22 +488,27 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
         ]
 
         guard !imageUrl.isEmpty, let key = getTextureId(player) else {
-            setNowPlayingInfoSafely(nowPlayingInfo)
+            setNowPlayingInfoSafely(nowPlayingInfo, generation: generation)
             return
         }
 
         if let artworkImage = artworkImageDict[key] {
             nowPlayingInfo[MPMediaItemPropertyArtwork] = artworkImage
-            setNowPlayingInfoSafely(nowPlayingInfo)
+            setNowPlayingInfoSafely(nowPlayingInfo, generation: generation)
             return
         }
 
+        if artworkLoadingGeneration[key] == generation {
+            setNowPlayingInfoSafely(nowPlayingInfo, generation: generation)
+            return
+        }
+
+        artworkLoadingGeneration[key] = generation
         let baseNowPlayingInfo = nowPlayingInfo
         DispatchQueue.global(qos: .default).async { [weak self] in
-            guard let self else {
+            guard self != nil else {
                 return
             }
-            var infoWithArtwork = baseNowPlayingInfo
             let image: UIImage?
             if imageUrl.contains("http"),
                let url = URL(string: imageUrl),
@@ -471,12 +518,32 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
                 image = UIImage(contentsOfFile: imageUrl)
             }
 
-            if let image {
-                let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
-                self.artworkImageDict[key] = artwork
-                infoWithArtwork[MPMediaItemPropertyArtwork] = artwork
+            DispatchQueue.main.async { [weak self, weak player] in
+                guard let self,
+                      self.artworkLoadingGeneration[key] == generation else {
+                    return
+                }
+                self.artworkLoadingGeneration.removeValue(forKey: key)
+
+                guard let player,
+                      generation == self.nowPlayingGeneration,
+                      self.notificationPlayer === player,
+                      self.players[key] === player,
+                      !player.disposed else {
+                    return
+                }
+
+                var infoWithArtwork = baseNowPlayingInfo
+                if let image {
+                    let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+                    self.artworkImageDict[key] = artwork
+                    infoWithArtwork[MPMediaItemPropertyArtwork] = artwork
+                }
+                self.setNowPlayingInfoSafely(
+                    infoWithArtwork,
+                    generation: generation
+                )
             }
-            self.setNowPlayingInfoSafely(infoWithArtwork)
         }
     }
 
@@ -488,10 +555,15 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
         _ player: BetterPlayer,
         title: String,
         author: String,
-        imageUrl: String
+        imageUrl: String,
+        generation: UInt64
     ) {
         guard let key = getTextureId(player) else {
             return
+        }
+
+        if let existingObserver = timeObserverIdDict.removeValue(forKey: key) {
+            player.player.removeTimeObserver(existingObserver)
         }
 
         let observer = player.player.addPeriodicTimeObserver(
@@ -505,20 +577,25 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
                 player,
                 title: title,
                 author: author,
-                imageUrl: imageUrl
+                imageUrl: imageUrl,
+                generation: generation
             )
         }
         timeObserverIdDict[key] = observer
     }
 
     private func disposeNotificationData(_ player: BetterPlayer) {
-        if player === notificationPlayer {
+        let isCurrentNotificationPlayer = player === notificationPlayer
+        if isCurrentNotificationPlayer {
+            nowPlayingGeneration &+= 1
             removeRemoteCommandTargets()
             notificationPlayer = nil
         }
 
         guard let key = getTextureId(player) else {
-            setNowPlayingInfoSafely([:])
+            if isCurrentNotificationPlayer {
+                setNowPlayingInfoSafely([:], generation: nowPlayingGeneration)
+            }
             return
         }
 
@@ -526,7 +603,10 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
             player.player.removeTimeObserver(timeObserverId)
         }
         artworkImageDict.removeValue(forKey: key)
-        setNowPlayingInfoSafely([:])
+        artworkLoadingGeneration.removeValue(forKey: key)
+        if isCurrentNotificationPlayer {
+            setNowPlayingInfoSafely([:], generation: nowPlayingGeneration)
+        }
     }
 
     private func stopOtherUpdateListener(_ player: BetterPlayer) {
