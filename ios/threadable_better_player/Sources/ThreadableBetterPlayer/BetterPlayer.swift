@@ -16,22 +16,27 @@ private func radiansToDegrees(_ radians: CGFloat) -> CGFloat {
 }
 
 private func betterPlayerRootViewController() -> UIViewController? {
-    if #available(iOS 13.0, *) {
-        for scene in UIApplication.shared.connectedScenes {
-            guard scene.activationState == .foregroundActive,
-                  let windowScene = scene as? UIWindowScene else {
-                continue
-            }
-            if let keyWindow = windowScene.windows.first(where: { $0.isKeyWindow }) {
-                return keyWindow.rootViewController
-            }
-            return windowScene.windows.first?.rootViewController
+    for scene in UIApplication.shared.connectedScenes {
+        guard scene.activationState == .foregroundActive,
+              let windowScene = scene as? UIWindowScene else {
+            continue
         }
+        if let keyWindow = windowScene.windows.first(where: { $0.isKeyWindow }) {
+            return keyWindow.rootViewController
+        }
+        return windowScene.windows.first?.rootViewController
     }
-    return UIApplication.shared.keyWindow?.rootViewController
+    return nil
 }
 
 final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, AVPictureInPictureControllerDelegate {
+    private struct PlaybackSnapshot {
+        let position: Int64
+        let absolutePosition: Int64
+        let duration: Int64
+        let durationIsFinite: Bool
+    }
+
     let player = AVPlayer()
 
     private var loaderDelegate: BetterPlayerEzDrmAssetsLoaderDelegate?
@@ -53,6 +58,17 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
     private var overriddenDuration = 0
     private var lastAvPlayerTimeControlStatus: AVPlayer.TimeControlStatus?
     private var pipController: AVPictureInPictureController?
+    private weak var observedItem: AVPlayerItem?
+    private var sourceGeneration: UInt64 = 0
+    private var pipGeneration: UInt64 = 0
+    private var readyMetadataGeneration: UInt64?
+    private var snapshotRequestInFlight = false
+    private var snapshotCompletions: [(PlaybackSnapshot) -> Void] = []
+    // MediaToolbox property reads can synchronously wait, so isolate them from main.
+    private let mediaPropertyQueue = DispatchQueue(
+        label: "io.threadable.betterplayer.media-property",
+        qos: .userInitiated
+    )
 
     override init() {
         super.init()
@@ -100,24 +116,32 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
             name: .AVPlayerItemDidPlayToEndTime,
             object: item
         )
+        observedItem = item
         observersAdded = true
     }
 
     func clear() {
+        sourceGeneration &+= 1
+        pipGeneration &+= 1
+        readyMetadataGeneration = nil
+        NSObject.cancelPreviousPerformRequests(
+            withTarget: self,
+            selector: #selector(startStalledCheck),
+            object: nil
+        )
         isInitialized = false
         isPlaying = false
         disposed = false
         failedCount = 0
         key = nil
-        guard let item = player.currentItem else {
-            return
-        }
+        loaderDelegate = nil
         removeObservers()
-        item.asset.cancelLoading()
+        player.currentItem?.asset.cancelLoading()
+        player.replaceCurrentItem(with: nil)
     }
 
     private func removeObservers() {
-        guard observersAdded, let item = player.currentItem else {
+        guard observersAdded, let item = observedItem else {
             return
         }
         player.removeObserver(self, forKeyPath: "rate", context: nil)
@@ -140,12 +164,29 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
             context: &playbackBufferFullContext
         )
         NotificationCenter.default.removeObserver(self)
+        observedItem = nil
         observersAdded = false
     }
 
+    private func isCurrent(item: AVPlayerItem, generation: UInt64) -> Bool {
+        Thread.isMainThread
+            && sourceGeneration == generation
+            && observedItem === item
+            && !disposed
+    }
+
     @objc private func itemDidPlayToEndTime(_ notification: Notification) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in
+                self?.itemDidPlayToEndTime(notification)
+            }
+            return
+        }
+        guard let item = notification.object as? AVPlayerItem, item === player.currentItem else {
+            return
+        }
         if isLooping {
-            (notification.object as? AVPlayerItem)?.seek(to: .zero, completionHandler: nil)
+            item.seek(to: .zero, completionHandler: nil)
             return
         }
         if let eventSink {
@@ -156,14 +197,14 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
 
     private func getVideoComposition(
         transform: CGAffineTransform,
-        asset: AVAsset,
-        videoTrack: AVAssetTrack
+        videoTrack: AVAssetTrack,
+        duration: CMTime
     ) -> AVMutableVideoComposition {
         let instruction = AVMutableVideoCompositionInstruction()
-        instruction.timeRange = CMTimeRange(start: .zero, duration: asset.duration)
+        instruction.timeRange = CMTimeRange(start: .zero, duration: duration)
 
         let layerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
-        layerInstruction.setTransform(preferredTransform, at: .zero)
+        layerInstruction.setTransform(transform, at: .zero)
 
         let videoComposition = AVMutableVideoComposition()
         instruction.layerInstructions = [layerInstruction]
@@ -171,7 +212,7 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
 
         var width = videoTrack.naturalSize.width
         var height = videoTrack.naturalSize.height
-        let rotationDegrees = Int(round(radiansToDegrees(atan2(preferredTransform.b, preferredTransform.a))))
+        let rotationDegrees = Int(round(radiansToDegrees(atan2(transform.b, transform.a))))
         if rotationDegrees == 90 || rotationDegrees == 270 {
             width = videoTrack.naturalSize.height
             height = videoTrack.naturalSize.width
@@ -208,7 +249,8 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
         licenseUrl: String?,
         cacheKey: String?,
         cacheManager: CacheManager,
-        overriddenDuration: Int
+        overriddenDuration: Int,
+        completion: @escaping () -> Void
     ) {
         let path = Bundle.main.path(forResource: asset, ofType: nil) ?? asset
         setDataSourceURL(
@@ -221,7 +263,8 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
             cacheKey: cacheKey,
             cacheManager: cacheManager,
             overriddenDuration: overriddenDuration,
-            videoExtension: nil
+            videoExtension: nil,
+            completion: completion
         )
     }
 
@@ -235,20 +278,25 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
         cacheKey: String?,
         cacheManager: CacheManager,
         overriddenDuration: Int,
-        videoExtension: String?
+        videoExtension: String?,
+        completion: @escaping () -> Void
     ) {
         self.overriddenDuration = 0
+        let requestGeneration = sourceGeneration
 
-        let item: AVPlayerItem
-        if useCache,
-           let cacheItem = cacheManager.getCachingPlayerItemForNormalPlayback(
-            url,
-            cacheKey: cacheKey,
-            videoExtension: videoExtension,
-            headers: headers
-           ) {
-            item = cacheItem
-        } else {
+        func setItem(_ item: AVPlayerItem) {
+            guard sourceGeneration == requestGeneration, !disposed else {
+                completion()
+                return
+            }
+            if #available(iOS 10.0, *), overriddenDuration > 0 {
+                self.overriddenDuration = overriddenDuration
+            }
+            setDataSourcePlayerItem(item, key: key)
+            completion()
+        }
+
+        guard useCache else {
             let asset = AVURLAsset(
                 url: url,
                 options: ["AVURLAssetHTTPHeaderFieldsKey": headers]
@@ -256,23 +304,40 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
             if let certificateUrl,
                !certificateUrl.isEmpty,
                let certificateURL = URL(string: certificateUrl) {
+                let queue = DispatchQueue(label: "streamQueue", qos: .default)
                 loaderDelegate = BetterPlayerEzDrmAssetsLoaderDelegate(
                     certificateURL: certificateURL,
-                    licenseURL: licenseUrl.flatMap(URL.init(string:))
+                    licenseURL: licenseUrl.flatMap(URL.init(string:)),
+                    callbackQueue: queue
                 )
-                let queue = DispatchQueue(label: "streamQueue", qos: .default)
                 asset.resourceLoader.setDelegate(loaderDelegate, queue: queue)
             }
-            item = AVPlayerItem(asset: asset)
+            setItem(AVPlayerItem(asset: asset))
+            return
         }
 
-        if #available(iOS 10.0, *), overriddenDuration > 0 {
-            self.overriddenDuration = overriddenDuration
+        cacheManager.getCachingPlayerItemForNormalPlayback(
+            url,
+            cacheKey: cacheKey,
+            videoExtension: videoExtension,
+            headers: headers
+        ) { item in
+            if let item {
+                setItem(item)
+            } else {
+                let asset = AVURLAsset(
+                    url: url,
+                    options: ["AVURLAssetHTTPHeaderFieldsKey": headers]
+                )
+                setItem(AVPlayerItem(asset: asset))
+            }
         }
-        setDataSourcePlayerItem(item, key: key)
     }
 
     private func setDataSourcePlayerItem(_ item: AVPlayerItem, key: String?) {
+        sourceGeneration &+= 1
+        let generation = sourceGeneration
+        readyMetadataGeneration = nil
         self.key = key
         stalledCount = 0
         isStalledCheckStarted = false
@@ -281,26 +346,32 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
 
         let asset = item.asset
         asset.loadValuesAsynchronously(forKeys: ["tracks"]) { [weak self, weak item] in
-            guard let self, let item, !self.disposed else {
-                return
-            }
-            guard asset.statusOfValue(forKey: "tracks", error: nil) == .loaded,
+            guard let item,
+                  asset.statusOfValue(forKey: "tracks", error: nil) == .loaded,
                   let videoTrack = asset.tracks(withMediaType: .video).first else {
                 return
             }
             videoTrack.loadValuesAsynchronously(forKeys: ["preferredTransform"]) { [weak self, weak item] in
-                guard let self, let item, !self.disposed else {
+                guard let item,
+                      videoTrack.statusOfValue(forKey: "preferredTransform", error: nil) == .loaded else {
                     return
                 }
-                guard videoTrack.statusOfValue(forKey: "preferredTransform", error: nil) == .loaded else {
-                    return
-                }
-                self.preferredTransform = self.fixTransform(videoTrack)
-                item.videoComposition = self.getVideoComposition(
-                    transform: self.preferredTransform,
-                    asset: asset,
-                    videoTrack: videoTrack
+                let transform = self?.fixTransform(videoTrack) ?? .identity
+                let composition = self?.getVideoComposition(
+                    transform: transform,
+                    videoTrack: videoTrack,
+                    duration: asset.duration
                 )
+                DispatchQueue.main.async { [weak self, weak item] in
+                    guard let self,
+                          let item,
+                          self.isCurrent(item: item, generation: generation),
+                          let composition else {
+                        return
+                    }
+                    self.preferredTransform = transform
+                    item.videoComposition = composition
+                }
             }
         }
         addObservers(item)
@@ -315,35 +386,47 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
     }
 
     @objc private func startStalledCheck() {
-        guard let currentItem = player.currentItem else {
+        guard player.currentItem != nil else {
             return
         }
-        if currentItem.isPlaybackLikelyToKeepUp
-            || availableDuration() - CMTimeGetSeconds(currentItem.currentTime()) > 10.0 {
-            play()
-            return
-        }
+        let generation = sourceGeneration
+        mediaPropertyQueue.async { [weak self] in
+            guard let self, let item = self.player.currentItem else {
+                return
+            }
+            let currentTime = item.currentTime()
+            let isLikelyToKeepUp = item.isPlaybackLikelyToKeepUp
+            let availableDuration = item.loadedTimeRanges.first.map {
+                let range = $0.timeRangeValue
+                return CMTimeGetSeconds(range.start) + CMTimeGetSeconds(range.duration)
+            } ?? 0
+            let hasBuffer = availableDuration - CMTimeGetSeconds(currentTime) > 10.0
+            DispatchQueue.main.async { [weak self, weak item] in
+                guard let self,
+                      let item,
+                      self.isCurrent(item: item, generation: generation) else {
+                    return
+                }
+                if isLikelyToKeepUp || hasBuffer {
+                    self.play()
+                    return
+                }
 
-        stalledCount += 1
-        if stalledCount > 60 {
-            eventSink?(
-                FlutterError(
-                    code: "VideoError",
-                    message: "Failed to load video: playback stalled",
-                    details: nil
-                )
-            )
-            return
-        }
+                self.stalledCount += 1
+                if self.stalledCount > 60 {
+                    self.eventSink?(
+                        FlutterError(
+                            code: "VideoError",
+                            message: "Failed to load video: playback stalled",
+                            details: nil
+                        )
+                    )
+                    return
+                }
 
-        perform(#selector(startStalledCheck), with: nil, afterDelay: 1)
-    }
-
-    private func availableDuration() -> TimeInterval {
-        guard let range = player.currentItem?.loadedTimeRanges.first?.timeRangeValue else {
-            return 0
+                self.perform(#selector(self.startStalledCheck), with: nil, afterDelay: 1)
+            }
         }
-        return CMTimeGetSeconds(range.start) + CMTimeGetSeconds(range.duration)
     }
 
     override func observeValue(
@@ -352,8 +435,25 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
         change: [NSKeyValueChangeKey: Any]?,
         context: UnsafeMutableRawPointer?
     ) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in
+                self?.observeValue(
+                    forKeyPath: path,
+                    of: object,
+                    change: change,
+                    context: context
+                )
+            }
+            return
+        }
+
         if path == "rate" {
             observeRate()
+            return
+        }
+
+        if let item = object as? AVPlayerItem, item !== observedItem {
+            return
         }
 
         if context == &timeRangeContext {
@@ -363,9 +463,23 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
         } else if context == &statusContext {
             observeStatus(object)
         } else if context == &playbackLikelyToKeepUpContext {
-            if player.currentItem?.isPlaybackLikelyToKeepUp == true {
-                updatePlayingState()
-                eventSink?(["event": "bufferingEnd", "key": key as Any])
+            guard let item = observedItem else {
+                return
+            }
+            let generation = sourceGeneration
+            mediaPropertyQueue.async { [weak self, weak item] in
+                guard let self, item?.isPlaybackLikelyToKeepUp == true else {
+                    return
+                }
+                DispatchQueue.main.async { [weak self, weak item] in
+                    guard let self,
+                          let item,
+                          self.isCurrent(item: item, generation: generation) else {
+                        return
+                    }
+                    self.updatePlayingState()
+                    self.eventSink?(["event": "bufferingEnd", "key": self.key as Any])
+                }
             }
         } else if context == &playbackBufferEmptyContext {
             eventSink?(["event": "bufferingStart", "key": key as Any])
@@ -375,74 +489,148 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
     }
 
     private func observeRate() {
-        if #available(iOS 10.0, *), pipController?.isPictureInPictureActive == true {
-            if lastAvPlayerTimeControlStatus == player.timeControlStatus {
+        guard let item = observedItem else {
+            return
+        }
+        let generation = sourceGeneration
+        let isPictureInPictureActive: Bool
+        if #available(iOS 10.0, *) {
+            isPictureInPictureActive = pipController?.isPictureInPictureActive == true
+        } else {
+            isPictureInPictureActive = false
+        }
+
+        mediaPropertyQueue.async { [weak self, weak item] in
+            guard let self, let item else {
                 return
             }
-            if player.timeControlStatus == .paused {
-                lastAvPlayerTimeControlStatus = player.timeControlStatus
+            let rate = self.player.rate
+            let timeControlStatus = self.player.timeControlStatus
+            let snapshot = PlaybackSnapshot(
+                position: BetterPlayerTimeUtils.millis(from: item.currentTime()),
+                absolutePosition: BetterPlayerTimeUtils.millis(
+                    from: item.currentDate()?.timeIntervalSince1970 ?? 0
+                ),
+                duration: self.duration(for: item),
+                durationIsFinite: BetterPlayerTimeUtils.isFinite(item.duration)
+            )
+            DispatchQueue.main.async { [weak self, weak item] in
+                guard let self,
+                      let item,
+                      self.sourceGeneration == generation,
+                      self.observedItem === item,
+                      !self.disposed else {
+                    return
+                }
+                self.handleRateObservation(
+                    rate: rate,
+                    timeControlStatus: timeControlStatus,
+                    isPictureInPictureActive: isPictureInPictureActive,
+                    snapshot: snapshot
+                )
+            }
+        }
+    }
+
+    private func handleRateObservation(
+        rate: Float,
+        timeControlStatus: AVPlayer.TimeControlStatus,
+        isPictureInPictureActive: Bool,
+        snapshot: PlaybackSnapshot
+    ) {
+        if isPictureInPictureActive {
+            if lastAvPlayerTimeControlStatus == timeControlStatus {
+                return
+            }
+            if timeControlStatus == .paused {
+                lastAvPlayerTimeControlStatus = timeControlStatus
                 eventSink?(["event": "pause"])
                 return
             }
-            if player.timeControlStatus == .playing {
-                lastAvPlayerTimeControlStatus = player.timeControlStatus
+            if timeControlStatus == .playing {
+                lastAvPlayerTimeControlStatus = timeControlStatus
                 eventSink?(["event": "play"])
             }
         }
 
-        guard let currentItem = player.currentItem else {
+        guard rate == 0, isPlaying, snapshot.position > 0 else {
             return
         }
-        if player.rate == 0,
-           currentItem.currentTime() > .zero,
-           currentItem.currentTime() < currentItem.duration,
-           isPlaying {
-            handleStalled()
+        guard !snapshot.durationIsFinite || snapshot.position < snapshot.duration else {
+            return
         }
+        handleStalled()
     }
 
     private func observeLoadedTimeRanges(_ object: Any?) {
         guard let item = object as? AVPlayerItem else {
             return
         }
-        var values: [[NSNumber]] = []
-        for rangeValue in item.loadedTimeRanges {
-            let range = rangeValue.timeRangeValue
-            let start = BetterPlayerTimeUtils.millis(from: range.start)
-            var end = start + BetterPlayerTimeUtils.millis(from: range.duration)
-            if let currentItem = player.currentItem,
-               BetterPlayerTimeUtils.isFinite(currentItem.forwardPlaybackEndTime) {
-                let endTime = BetterPlayerTimeUtils.millis(from: currentItem.forwardPlaybackEndTime)
-                if end > endTime {
-                    end = endTime
-                }
+        let generation = sourceGeneration
+        mediaPropertyQueue.async { [weak self, weak item] in
+            guard let self, let item else {
+                return
             }
-            values.append([NSNumber(value: start), NSNumber(value: end)])
+            var values: [[NSNumber]] = []
+            for rangeValue in item.loadedTimeRanges {
+                let range = rangeValue.timeRangeValue
+                let start = BetterPlayerTimeUtils.millis(from: range.start)
+                var end = start + BetterPlayerTimeUtils.millis(from: range.duration)
+                if BetterPlayerTimeUtils.isFinite(item.forwardPlaybackEndTime) {
+                    let endTime = BetterPlayerTimeUtils.millis(from: item.forwardPlaybackEndTime)
+                    if end > endTime {
+                        end = endTime
+                    }
+                }
+                values.append([NSNumber(value: start), NSNumber(value: end)])
+            }
+            DispatchQueue.main.async { [weak self, weak item] in
+                guard let self,
+                      let item,
+                      self.isCurrent(item: item, generation: generation) else {
+                    return
+                }
+                self.eventSink?(["event": "bufferingUpdate", "values": values, "key": self.key as Any])
+            }
         }
-        eventSink?(["event": "bufferingUpdate", "values": values, "key": key as Any])
     }
 
     private func observeStatus(_ object: Any?) {
         guard let item = object as? AVPlayerItem else {
             return
         }
-        switch item.status {
-        case .failed:
-            NSLog("Failed to load video:")
-            NSLog(item.error.debugDescription)
-            eventSink?(
-                FlutterError(
-                    code: "VideoError",
-                    message: "Failed to load video: \(item.error?.localizedDescription ?? "")",
-                    details: nil
-                )
-            )
-        case .unknown:
-            break
-        case .readyToPlay:
-            onReadyToPlay()
-        @unknown default:
-            break
+        let generation = sourceGeneration
+        mediaPropertyQueue.async { [weak self, weak item] in
+            guard let self, let item else {
+                return
+            }
+            let status = item.status
+            let errorDescription = item.error?.localizedDescription ?? ""
+            DispatchQueue.main.async { [weak self, weak item] in
+                guard let self,
+                      let item,
+                      self.isCurrent(item: item, generation: generation) else {
+                    return
+                }
+                switch status {
+                case .failed:
+                    NSLog("Failed to load video:")
+                    NSLog(errorDescription)
+                    self.eventSink?(
+                        FlutterError(
+                            code: "VideoError",
+                            message: "Failed to load video: \(errorDescription)",
+                            details: nil
+                        )
+                    )
+                case .unknown:
+                    break
+                case .readyToPlay:
+                    self.onReadyToPlay()
+                @unknown default:
+                    break
+                }
+            }
         }
     }
 
@@ -468,48 +656,103 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
     }
 
     private func onReadyToPlay() {
-        guard let eventSink, !isInitialized, key != nil, let currentItem = player.currentItem else {
+        guard !isInitialized,
+              key != nil,
+              let currentItem = observedItem else {
             return
         }
-        guard player.status == .readyToPlay else {
+        let generation = sourceGeneration
+        guard readyMetadataGeneration != generation else {
             return
         }
+        readyMetadataGeneration = generation
+        let asset = currentItem.asset
+        mediaPropertyQueue.async { [weak self, weak currentItem] in
+            guard let self,
+                  let currentItem,
+                  self.player.status == .readyToPlay else {
+                DispatchQueue.main.async { [weak self, weak currentItem] in
+                    guard let self,
+                          let currentItem,
+                          self.isCurrent(item: currentItem, generation: generation) else {
+                        return
+                    }
+                    self.readyMetadataGeneration = nil
+                }
+                return
+            }
+            asset.loadValuesAsynchronously(forKeys: ["tracks", "duration"]) { [weak self, weak currentItem] in
+                guard let currentItem,
+                      asset.statusOfValue(forKey: "tracks", error: nil) == .loaded,
+                      asset.statusOfValue(forKey: "duration", error: nil) == .loaded else {
+                    DispatchQueue.main.async { [weak self, weak currentItem] in
+                        guard let self,
+                              let currentItem,
+                              self.isCurrent(item: currentItem, generation: generation) else {
+                            return
+                        }
+                        self.readyMetadataGeneration = nil
+                    }
+                    return
+                }
 
-        let size = currentItem.presentationSize
-        let width = size.width
-        let height = size.height
-        let onlyAudio = currentItem.asset.tracks(withMediaType: .video).isEmpty
+                let size = currentItem.presentationSize
+                let width = size.width
+                let height = size.height
+                let videoTrack = asset.tracks(withMediaType: .video).first
+                let isLive = currentItem.duration.isIndefinite
+                let assetDuration = BetterPlayerTimeUtils.millis(from: asset.duration)
+                let duration = BetterPlayerTimeUtils.millis(
+                    from: BetterPlayerTimeUtils.isFinite(currentItem.forwardPlaybackEndTime)
+                        ? currentItem.forwardPlaybackEndTime
+                        : currentItem.duration
+                )
+                let realSize = videoTrack.map {
+                    $0.naturalSize.applying($0.preferredTransform)
+                } ?? size
 
-        if !onlyAudio && height == 0 && width == 0 {
-            return
+                DispatchQueue.main.async { [weak self, weak currentItem] in
+                    guard let self,
+                          let currentItem,
+                          self.isCurrent(item: currentItem, generation: generation),
+                          !self.isInitialized else {
+                        return
+                    }
+                    if videoTrack != nil, height == 0, width == 0 {
+                        self.readyMetadataGeneration = nil
+                        return
+                    }
+                    if !isLive && duration == 0 {
+                        self.readyMetadataGeneration = nil
+                        return
+                    }
+                    guard let eventSink = self.eventSink else {
+                        self.readyMetadataGeneration = nil
+                        return
+                    }
+                    let initializedDuration: Int64
+                    if self.overriddenDuration > 0 && assetDuration > self.overriddenDuration {
+                        currentItem.forwardPlaybackEndTime = CMTime(
+                            value: CMTimeValue(self.overriddenDuration / 1000),
+                            timescale: 1
+                        )
+                        initializedDuration = Int64(self.overriddenDuration)
+                    } else {
+                        initializedDuration = duration
+                    }
+
+                    self.isInitialized = true
+                    self.updatePlayingState()
+                    eventSink([
+                        "event": "initialized",
+                        "duration": initializedDuration,
+                        "width": abs(realSize.width) != 0 ? abs(realSize.width) : width,
+                        "height": abs(realSize.height) != 0 ? abs(realSize.height) : height,
+                        "key": self.key as Any
+                    ])
+                }
+            }
         }
-        let isLive = currentItem.duration.isIndefinite
-        if !isLive && duration() == 0 {
-            return
-        }
-
-        var realSize = size
-        if let track = currentItem.tracks.first?.assetTrack {
-            realSize = track.naturalSize.applying(track.preferredTransform)
-        }
-
-        let assetDuration = BetterPlayerTimeUtils.millis(from: currentItem.asset.duration)
-        if overriddenDuration > 0 && assetDuration > overriddenDuration {
-            currentItem.forwardPlaybackEndTime = CMTime(
-                value: CMTimeValue(overriddenDuration / 1000),
-                timescale: 1
-            )
-        }
-
-        isInitialized = true
-        updatePlayingState()
-        eventSink([
-            "event": "initialized",
-            "duration": duration(),
-            "width": abs(realSize.width) != 0 ? abs(realSize.width) : width,
-            "height": abs(realSize.height) != 0 ? abs(realSize.height) : height,
-            "key": key as Any
-        ])
     }
 
     func play() {
@@ -533,10 +776,82 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
         return BetterPlayerTimeUtils.millis(from: interval)
     }
 
+    func positionAsync(completion: @escaping (Int64) -> Void) {
+        requestPlaybackSnapshot { snapshot in
+            completion(snapshot.position)
+        }
+    }
+
+    func absolutePositionAsync(completion: @escaping (Int64) -> Void) {
+        requestPlaybackSnapshot { snapshot in
+            completion(snapshot.absolutePosition)
+        }
+    }
+
+    func playbackSnapshot(completion: @escaping (Int64, Int64) -> Void) {
+        requestPlaybackSnapshot { snapshot in
+            completion(snapshot.position, snapshot.duration)
+        }
+    }
+
+    private func requestPlaybackSnapshot(completion: @escaping (PlaybackSnapshot) -> Void) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in
+                self?.requestPlaybackSnapshot(completion: completion)
+            }
+            return
+        }
+
+        snapshotCompletions.append(completion)
+        startPlaybackSnapshotIfNeeded()
+    }
+
+    private func startPlaybackSnapshotIfNeeded() {
+        guard !snapshotRequestInFlight, !snapshotCompletions.isEmpty else {
+            return
+        }
+        snapshotRequestInFlight = true
+        let generation = sourceGeneration
+
+        mediaPropertyQueue.async { [weak self] in
+            guard let self else {
+                return
+            }
+            let item = self.player.currentItem
+            let snapshot = PlaybackSnapshot(
+                position: item.map { BetterPlayerTimeUtils.millis(from: $0.currentTime()) } ?? 0,
+                absolutePosition: BetterPlayerTimeUtils.millis(
+                    from: item?.currentDate()?.timeIntervalSince1970 ?? 0
+                ),
+                duration: item.map { self.duration(for: $0) } ?? 0,
+                durationIsFinite: item.map {
+                    BetterPlayerTimeUtils.isFinite($0.duration)
+                } ?? false
+            )
+            DispatchQueue.main.async { [weak self] in
+                guard let self else {
+                    return
+                }
+                self.snapshotRequestInFlight = false
+                guard self.sourceGeneration == generation else {
+                    self.startPlaybackSnapshotIfNeeded()
+                    return
+                }
+                let completions = self.snapshotCompletions
+                self.snapshotCompletions.removeAll()
+                completions.forEach { $0(snapshot) }
+            }
+        }
+    }
+
     func duration() -> Int64 {
         guard let currentItem = player.currentItem else {
             return 0
         }
+        return duration(for: currentItem)
+    }
+
+    private func duration(for currentItem: AVPlayerItem) -> Int64 {
         var time: CMTime
         if #available(iOS 13.0, *) {
             time = currentItem.duration
@@ -573,33 +888,64 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
         if speed == 1.0 || speed == 0.0 {
             playerRate = 1
             result(nil)
-        } else if speed < 0 || speed > 2.0 {
+            if isPlaying {
+                player.rate = playerRate
+            }
+            return
+        }
+        if speed < 0 || speed > 2.0 {
             result(FlutterError(
                 code: "unsupported_speed",
                 message: "Speed must be >= 0.0 and <= 2.0",
                 details: nil
             ))
-        } else if let currentItem = player.currentItem,
-                  (speed > 1.0 && currentItem.canPlayFastForward)
-                    || (speed < 1.0 && currentItem.canPlaySlowForward) {
-            playerRate = Float(speed)
-            result(nil)
-        } else if speed > 1.0 {
-            result(FlutterError(
-                code: "unsupported_fast_forward",
-                message: "This video cannot be played fast forward",
-                details: nil
-            ))
-        } else {
-            result(FlutterError(
-                code: "unsupported_slow_forward",
-                message: "This video cannot be played slow forward",
-                details: nil
-            ))
+            return
         }
 
-        if isPlaying {
-            player.rate = playerRate
+        guard let currentItem = player.currentItem else {
+            result(FlutterError(
+                code: "VideoError",
+                message: "Cannot change speed before a video is loaded",
+                details: nil
+            ))
+            return
+        }
+        let generation = sourceGeneration
+        mediaPropertyQueue.async { [weak self, weak currentItem] in
+            let supported = speed > 1.0
+                ? currentItem?.canPlayFastForward == true
+                : currentItem?.canPlaySlowForward == true
+            DispatchQueue.main.async { [weak self, weak currentItem] in
+                guard let self,
+                      let currentItem,
+                      self.isCurrent(item: currentItem, generation: generation) else {
+                    result(FlutterError(
+                        code: "VideoError",
+                        message: "Video source changed before speed was applied",
+                        details: nil
+                    ))
+                    return
+                }
+                if supported {
+                    self.playerRate = Float(speed)
+                    if self.isPlaying {
+                        self.player.rate = self.playerRate
+                    }
+                    result(nil)
+                } else if speed > 1.0 {
+                    result(FlutterError(
+                        code: "unsupported_fast_forward",
+                        message: "This video cannot be played fast forward",
+                        details: nil
+                    ))
+                } else {
+                    result(FlutterError(
+                        code: "unsupported_slow_forward",
+                        message: "This video cannot be played slow forward",
+                        details: nil
+                    ))
+                }
+            }
         }
     }
 
@@ -613,16 +959,36 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
     }
 
     func setPictureInPicture(_ pictureInPicture: Bool) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in
+                self?.setPictureInPicture(pictureInPicture)
+            }
+            return
+        }
         self.pictureInPicture = pictureInPicture
+        pipGeneration &+= 1
+        let generation = pipGeneration
         guard #available(iOS 9.0, *), let pipController else {
             return
         }
         if pictureInPicture && !pipController.isPictureInPictureActive {
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self, weak pipController] in
+                guard let self,
+                      self.pipGeneration == generation,
+                      self.pictureInPicture,
+                      let pipController else {
+                    return
+                }
                 pipController.startPictureInPicture()
             }
         } else if !pictureInPicture && pipController.isPictureInPictureActive {
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self, weak pipController] in
+                guard let self,
+                      self.pipGeneration == generation,
+                      !self.pictureInPicture,
+                      let pipController else {
+                    return
+                }
                 pipController.stopPictureInPicture()
             }
         }
@@ -658,13 +1024,22 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
         }
         pipController = nil
         setupPipController()
+        pipGeneration &+= 1
+        let generation = pipGeneration
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
-            self?.setPictureInPicture(true)
+            guard let self, self.pipGeneration == generation, self.playerLayer != nil else {
+                return
+            }
+            self.setPictureInPicture(true)
         }
     }
 
     func disablePictureInPicture() {
-        setPictureInPicture(true)
+        pipGeneration &+= 1
+        pictureInPicture = false
+        if #available(iOS 9.0, *), let pipController, pipController.isPictureInPictureActive {
+            pipController.stopPictureInPicture()
+        }
         if let playerLayer {
             playerLayer.removeFromSuperlayer()
             self.playerLayer = nil
@@ -691,23 +1066,42 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
         completionHandler(true)
     }
 
-    func setAudioTrack(name: String?, index: Int) {
-        guard let audioSelectionGroup = player.currentItem?.asset
-            .mediaSelectionGroup(forMediaCharacteristic: .audible) else {
+    func setAudioTrack(name: String?, index: Int, completion: @escaping () -> Void) {
+        guard let currentItem = player.currentItem else {
+            completion()
             return
         }
-
-        for (audioTrackIndex, option) in audioSelectionGroup.options.enumerated() {
-            let metadata = AVMetadataItem.metadataItems(
-                from: option.commonMetadata,
-                withKey: "title" as NSString,
-                keySpace: .common
-            )
-            guard let title = metadata.first?.stringValue else {
-                continue
+        let generation = sourceGeneration
+        mediaPropertyQueue.async { [weak self, weak currentItem] in
+            guard let currentItem,
+                  let audioSelectionGroup = currentItem.asset
+                      .mediaSelectionGroup(forMediaCharacteristic: .audible) else {
+                DispatchQueue.main.async {
+                    completion()
+                }
+                return
             }
-            if title == name && audioTrackIndex == index {
-                player.currentItem?.select(option, in: audioSelectionGroup)
+            let option = audioSelectionGroup.options.enumerated().first { audioTrackIndex, option in
+                guard audioTrackIndex == index else {
+                    return false
+                }
+                let metadata = AVMetadataItem.metadataItems(
+                    from: option.commonMetadata,
+                    withKey: "title" as NSString,
+                    keySpace: .common
+                )
+                return metadata.first?.stringValue == name
+            }?.element
+            DispatchQueue.main.async { [weak self, weak currentItem] in
+                guard let self,
+                      let currentItem,
+                      self.isCurrent(item: currentItem, generation: generation),
+                      let option else {
+                    completion()
+                    return
+                }
+                currentItem.select(option, in: audioSelectionGroup)
+                completion()
             }
         }
     }
@@ -743,7 +1137,6 @@ final class BetterPlayer: NSObject, FlutterPlatformView, FlutterStreamHandler, A
         disposeSansEventChannel()
         eventChannel?.setStreamHandler(nil)
         disablePictureInPicture()
-        setPictureInPicture(false)
         disposed = true
     }
 

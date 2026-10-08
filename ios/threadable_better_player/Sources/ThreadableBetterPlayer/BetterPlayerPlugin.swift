@@ -101,9 +101,13 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
             player.play()
             result(nil)
         case "position":
-            result(NSNumber(value: player.position()))
+            player.positionAsync { position in
+                result(NSNumber(value: position))
+            }
         case "absolutePosition":
-            result(NSNumber(value: player.absolutePosition()))
+            player.absolutePositionAsync { position in
+                result(NSNumber(value: position))
+            }
         case "seekTo":
             player.seekTo((argsMap["location"] as? NSNumber)?.intValue ?? 0)
             result(nil)
@@ -131,14 +135,15 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
             result(NSNumber(value: AVPictureInPictureController.isPictureInPictureSupported()))
         case "disablePictureInPicture":
             player.disablePictureInPicture()
-            player.setPictureInPicture(false)
             result(nil)
         case "setAudioTrack":
             player.setAudioTrack(
                 name: argsMap["name"] as? String,
-                index: (argsMap["index"] as? NSNumber)?.intValue ?? 0
+                index: (argsMap["index"] as? NSNumber)?.intValue ?? 0,
+                completion: {
+                    result(nil)
+                }
             )
-            result(nil)
         case "setMixWithOthers":
             player.setMixWithOthers((argsMap["mixWithOthers"] as? NSNumber)?.boolValue ?? false)
             result(nil)
@@ -146,8 +151,9 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
             preCache(argsMap: argsMap)
             result(nil)
         case "clearCache":
-            cacheManager.clearCache()
-            result(nil)
+            cacheManager.clearCache {
+                result(nil)
+            }
         case "stopPreCache":
             stopPreCache(argsMap: argsMap)
             result(nil)
@@ -219,9 +225,11 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
                 licenseUrl: licenseUrl,
                 cacheKey: cacheKey,
                 cacheManager: cacheManager,
-                overriddenDuration: overriddenDuration
+                overriddenDuration: overriddenDuration,
+                completion: {
+                    result(nil)
+                }
             )
-            result(nil)
             return
         }
 
@@ -237,9 +245,11 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
                 cacheKey: cacheKey,
                 cacheManager: cacheManager,
                 overriddenDuration: overriddenDuration,
-                videoExtension: videoExtension
+                videoExtension: videoExtension,
+                completion: {
+                    result(nil)
+                }
             )
-            result(nil)
             return
         }
 
@@ -479,11 +489,43 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
             return
         }
 
+        player.playbackSnapshot { [weak self, weak player] position, duration in
+            guard let self, let player else {
+                return
+            }
+            self.publishRemoteCommandNotification(
+                player,
+                title: title,
+                author: author,
+                imageUrl: imageUrl,
+                generation: generation,
+                position: position,
+                duration: duration
+            )
+        }
+    }
+
+    private func publishRemoteCommandNotification(
+        _ player: BetterPlayer,
+        title: String,
+        author: String,
+        imageUrl: String,
+        generation: UInt64,
+        position: Int64,
+        duration: Int64
+    ) {
+        guard Thread.isMainThread,
+              generation == nowPlayingGeneration,
+              notificationPlayer === player,
+              !player.disposed else {
+            return
+        }
+
         var nowPlayingInfo: [String: Any] = [
             MPMediaItemPropertyArtist: author,
             MPMediaItemPropertyTitle: title,
-            MPNowPlayingInfoPropertyElapsedPlaybackTime: max(0.0, Double(player.position()) / 1000.0),
-            MPMediaItemPropertyPlaybackDuration: max(0.0, Double(player.duration()) / 1000.0),
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: max(0.0, Double(position) / 1000.0),
+            MPMediaItemPropertyPlaybackDuration: max(0.0, Double(duration) / 1000.0),
             MPNowPlayingInfoPropertyPlaybackRate: player.isPlaying ? 1 : 0
         ]
 
@@ -505,44 +547,59 @@ public final class BetterPlayerPlugin: NSObject, FlutterPlugin, FlutterPlatformV
 
         artworkLoadingGeneration[key] = generation
         let baseNowPlayingInfo = nowPlayingInfo
-        DispatchQueue.global(qos: .default).async { [weak self] in
-            guard self != nil else {
+        loadArtwork(imageUrl) { [weak self, weak player] image in
+            guard let self,
+                  self.artworkLoadingGeneration[key] == generation else {
                 return
             }
-            let image: UIImage?
-            if imageUrl.contains("http"),
-               let url = URL(string: imageUrl),
-               let data = try? Data(contentsOf: url) {
-                image = UIImage(data: data)
-            } else {
-                image = UIImage(contentsOfFile: imageUrl)
+            self.artworkLoadingGeneration.removeValue(forKey: key)
+
+            guard let player,
+                  generation == self.nowPlayingGeneration,
+                  self.notificationPlayer === player,
+                  self.players[key] === player,
+                  !player.disposed else {
+                return
             }
 
-            DispatchQueue.main.async { [weak self, weak player] in
-                guard let self,
-                      self.artworkLoadingGeneration[key] == generation else {
-                    return
-                }
-                self.artworkLoadingGeneration.removeValue(forKey: key)
+            var infoWithArtwork = baseNowPlayingInfo
+            if let image {
+                let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+                self.artworkImageDict[key] = artwork
+                infoWithArtwork[MPMediaItemPropertyArtwork] = artwork
+            }
+            self.setNowPlayingInfoSafely(
+                infoWithArtwork,
+                generation: generation
+            )
+        }
+    }
 
-                guard let player,
-                      generation == self.nowPlayingGeneration,
-                      self.notificationPlayer === player,
-                      self.players[key] === player,
-                      !player.disposed else {
-                    return
+    private func loadArtwork(_ source: String, completion: @escaping (UIImage?) -> Void) {
+        if source.contains("http"), let url = URL(string: source) {
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 30
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                let image: UIImage?
+                if error == nil,
+                   let httpResponse = response as? HTTPURLResponse,
+                   (200..<300).contains(httpResponse.statusCode),
+                   let data {
+                    image = UIImage(data: data)
+                } else {
+                    image = nil
                 }
+                DispatchQueue.main.async {
+                    completion(image)
+                }
+            }.resume()
+            return
+        }
 
-                var infoWithArtwork = baseNowPlayingInfo
-                if let image {
-                    let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
-                    self.artworkImageDict[key] = artwork
-                    infoWithArtwork[MPMediaItemPropertyArtwork] = artwork
-                }
-                self.setNowPlayingInfoSafely(
-                    infoWithArtwork,
-                    generation: generation
-                )
+        DispatchQueue.global(qos: .utility).async {
+            let image = UIImage(contentsOfFile: source)
+            DispatchQueue.main.async {
+                completion(image)
             }
         }
     }

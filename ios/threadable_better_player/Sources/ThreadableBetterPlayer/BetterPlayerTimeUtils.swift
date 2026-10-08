@@ -12,13 +12,20 @@ enum BetterPlayerTimeUtils {
         if !isFinite(time) {
             return 0
         }
-        return time.value * 1000 / Int64(time.timescale)
+        return millis(from: CMTimeGetSeconds(time))
     }
 
     static func millis(from interval: TimeInterval) -> Int64 {
         if interval.isNaN || interval.isInfinite {
             return 0
         }
-        return Int64(interval * 1000.0)
+        let milliseconds = interval * 1000.0
+        if milliseconds >= Double(Int64.max) {
+            return Int64.max
+        }
+        if milliseconds <= Double(Int64.min) {
+            return Int64.min
+        }
+        return Int64(milliseconds)
     }
 }

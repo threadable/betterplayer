@@ -28,6 +28,17 @@ final class CachingPlayerItem: AVPlayerItem {
         URLSessionDataDelegate,
         URLSessionTaskDelegate
     {
+        let stateQueue = DispatchQueue(
+            label: "io.threadable.betterplayer.resource-loader",
+            qos: .utility
+        )
+
+        private let sessionDelegateQueue: OperationQueue = {
+            let queue = OperationQueue()
+            queue.maxConcurrentOperationCount = 1
+            return queue
+        }()
+
         var playingFromData = false
         var mimeType: String?
         var session: URLSession?
@@ -36,6 +47,25 @@ final class CachingPlayerItem: AVPlayerItem {
         var response: URLResponse?
         var pendingRequests = Set<AVAssetResourceLoadingRequest>()
         weak var owner: CachingPlayerItem?
+
+        override init() {
+            super.init()
+            sessionDelegateQueue.underlyingQueue = stateQueue
+        }
+
+        func configure(headers: [AnyHashable: Any]) {
+            stateQueue.sync {
+                self.headers = headers
+            }
+        }
+
+        func configure(data: Data, mimeType: String) {
+            stateQueue.sync {
+                mediaData = data
+                playingFromData = true
+                self.mimeType = mimeType
+            }
+        }
 
         func resourceLoader(
             _ resourceLoader: AVAssetResourceLoader,
@@ -54,9 +84,19 @@ final class CachingPlayerItem: AVPlayerItem {
         }
 
         func startDataRequest(url: URL) {
+            guard session == nil else {
+                return
+            }
+
             let configuration = URLSessionConfiguration.default
             configuration.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
-            session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
+            configuration.timeoutIntervalForRequest = 30
+            configuration.timeoutIntervalForResource = 300
+            session = URLSession(
+                configuration: configuration,
+                delegate: self,
+                delegateQueue: sessionDelegateQueue
+            )
 
             var request = URLRequest(url: url)
             request.httpMethod = "GET"
@@ -80,11 +120,15 @@ final class CachingPlayerItem: AVPlayerItem {
         func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
             mediaData?.append(data)
             processPendingRequests()
-            owner?.delegate?.playerItem?(
-                owner!,
-                didDownloadBytesSoFar: mediaData?.count ?? 0,
-                outOf: Int(dataTask.countOfBytesExpectedToReceive)
-            )
+            let bytesDownloaded = mediaData?.count ?? 0
+            let bytesExpected = Int(dataTask.countOfBytesExpectedToReceive)
+            notifyOnMain { delegate, owner in
+                delegate.playerItem?(
+                    owner,
+                    didDownloadBytesSoFar: bytesDownloaded,
+                    outOf: bytesExpected
+                )
+            }
         }
 
         func urlSession(
@@ -101,12 +145,29 @@ final class CachingPlayerItem: AVPlayerItem {
 
         func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
             if let error {
-                owner?.delegate?.playerItem?(owner!, downloadingFailedWith: error)
+                notifyOnMain { delegate, owner in
+                    delegate.playerItem?(owner, downloadingFailedWith: error)
+                }
+                self.session = nil
                 return
             }
             processPendingRequests()
-            if let owner, let mediaData {
-                owner.delegate?.playerItem?(owner, didFinishDownloadingData: mediaData)
+            if let mediaData {
+                notifyOnMain { delegate, owner in
+                    delegate.playerItem?(owner, didFinishDownloadingData: mediaData)
+                }
+            }
+            self.session = nil
+        }
+
+        private func notifyOnMain(
+            _ callback: @escaping (CachingPlayerItemDelegate, CachingPlayerItem) -> Void
+        ) {
+            DispatchQueue.main.async { [weak self] in
+                guard let self, let owner = self.owner, let delegate = owner.delegate else {
+                    return
+                }
+                callback(delegate, owner)
             }
         }
 
@@ -145,9 +206,13 @@ final class CachingPlayerItem: AVPlayerItem {
         }
 
         func haveEnoughDataToFulfillRequest(_ dataRequest: AVAssetResourceLoadingDataRequest) -> Bool {
-            let requestedOffset = Int(dataRequest.requestedOffset)
+            guard dataRequest.requestedOffset >= 0,
+                  dataRequest.currentOffset >= 0,
+                  let requestedOffset = Int(exactly: dataRequest.requestedOffset),
+                  let currentOffset = Int(exactly: dataRequest.currentOffset) else {
+                return false
+            }
             let requestedLength = dataRequest.requestedLength
-            let currentOffset = Int(dataRequest.currentOffset)
 
             guard let mediaData, mediaData.count > currentOffset else {
                 return false
@@ -178,7 +243,7 @@ final class CachingPlayerItem: AVPlayerItem {
     init(url: URL, customFileExtension: String?, cacheKey: String?, headers: [AnyHashable: Any]) {
         self.cacheKey = cacheKey
         self.url = url
-        resourceLoaderDelegate.headers = headers
+        resourceLoaderDelegate.configure(headers: headers)
 
         guard let schemeURL = url.withScheme(cachingPlayerItemScheme) else {
             fatalError("Urls without a scheme are not supported")
@@ -191,7 +256,7 @@ final class CachingPlayerItem: AVPlayerItem {
         }
 
         let asset = AVURLAsset(url: urlWithCustomScheme)
-        asset.resourceLoader.setDelegate(resourceLoaderDelegate, queue: .main)
+        asset.resourceLoader.setDelegate(resourceLoaderDelegate, queue: resourceLoaderDelegate.stateQueue)
         super.init(asset: asset, automaticallyLoadedAssetKeys: nil)
 
         resourceLoaderDelegate.owner = self
@@ -210,12 +275,10 @@ final class CachingPlayerItem: AVPlayerItem {
         }
 
         self.url = fakeURL
-        resourceLoaderDelegate.mediaData = data
-        resourceLoaderDelegate.playingFromData = true
-        resourceLoaderDelegate.mimeType = mimeType
+        resourceLoaderDelegate.configure(data: data, mimeType: mimeType)
 
         let asset = AVURLAsset(url: fakeURL)
-        asset.resourceLoader.setDelegate(resourceLoaderDelegate, queue: .main)
+        asset.resourceLoader.setDelegate(resourceLoaderDelegate, queue: resourceLoaderDelegate.stateQueue)
         super.init(asset: asset, automaticallyLoadedAssetKeys: nil)
 
         resourceLoaderDelegate.owner = self
@@ -229,13 +292,19 @@ final class CachingPlayerItem: AVPlayerItem {
     }
 
     func download() {
-        if resourceLoaderDelegate.session == nil {
-            resourceLoaderDelegate.startDataRequest(url: url)
+        resourceLoaderDelegate.stateQueue.async { [weak self] in
+            guard let self else {
+                return
+            }
+            self.resourceLoaderDelegate.startDataRequest(url: self.url)
         }
     }
 
     func stopDownload() {
-        resourceLoaderDelegate.session?.invalidateAndCancel()
+        resourceLoaderDelegate.stateQueue.async { [weak self] in
+            self?.resourceLoaderDelegate.session?.invalidateAndCancel()
+            self?.resourceLoaderDelegate.session = nil
+        }
     }
 
     override func observeValue(
@@ -244,11 +313,21 @@ final class CachingPlayerItem: AVPlayerItem {
         change: [NSKeyValueChangeKey: Any]?,
         context: UnsafeMutableRawPointer?
     ) {
-        delegate?.playerItemReadyToPlay?(self)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else {
+                return
+            }
+            self.delegate?.playerItemReadyToPlay?(self)
+        }
     }
 
     @objc private func playbackStalledHandler() {
-        delegate?.playerItemPlaybackStalled?(self)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else {
+                return
+            }
+            self.delegate?.playerItemPlaybackStalled?(self)
+        }
     }
 
     @available(*, unavailable)

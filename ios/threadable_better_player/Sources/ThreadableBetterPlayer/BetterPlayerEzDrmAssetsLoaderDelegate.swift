@@ -6,40 +6,69 @@ final class BetterPlayerEzDrmAssetsLoaderDelegate: NSObject, AVAssetResourceLoad
 
     private let certificateURL: URL
     private let licenseURL: URL?
+    private let callbackQueue: DispatchQueue
+    private let session: URLSession
+    private var tasks: [ObjectIdentifier: URLSessionDataTask] = [:]
+    private var cancelledRequestIds = Set<ObjectIdentifier>()
 
-    init(certificateURL: URL, licenseURL: URL?) {
+    init(certificateURL: URL, licenseURL: URL?, callbackQueue: DispatchQueue) {
         self.certificateURL = certificateURL
         self.licenseURL = licenseURL
+        self.callbackQueue = callbackQueue
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 30
+        configuration.timeoutIntervalForResource = 30
+        session = URLSession(configuration: configuration)
         super.init()
+    }
+
+    deinit {
+        session.invalidateAndCancel()
     }
 
     private func appCertificate() throws -> Data {
         try Data(contentsOf: certificateURL)
     }
 
-    private func contentKey(
+    private func contentKeyRequest(
         requestBytes: Data,
         assetId: String,
-        customParams: String
-    ) -> Data? {
+        customParams: String,
+        requestId: ObjectIdentifier,
+        completion: @escaping (Data?, Error?) -> Void
+    ) {
         let baseURL = licenseURL ?? Self.defaultLicenseServerURL
         guard let keyServerURL = URL(string: "\(baseURL)\(assetId)\(customParams)") else {
-            return nil
+            completion(nil, URLError(.badURL))
+            return
         }
 
         var request = URLRequest(url: keyServerURL)
         request.httpMethod = "POST"
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-type")
         request.httpBody = requestBytes
+        request.timeoutInterval = 30
 
-        var responseData: Data?
-        let semaphore = DispatchSemaphore(value: 0)
-        URLSession.shared.dataTask(with: request) { data, _, _ in
-            responseData = data
-            semaphore.signal()
-        }.resume()
-        semaphore.wait()
-        return responseData
+        let task = session.dataTask(with: request) { data, response, error in
+            guard error == nil,
+                  let httpResponse = response as? HTTPURLResponse,
+                  (200..<300).contains(httpResponse.statusCode) else {
+                completion(nil, error ?? URLError(.badServerResponse))
+                return
+            }
+            completion(data, nil)
+        }
+        callbackQueue.async { [weak self] in
+            guard let self else {
+                return
+            }
+            if self.cancelledRequestIds.remove(requestId) != nil {
+                task.cancel()
+                return
+            }
+            self.tasks[requestId] = task
+            task.resume()
+        }
     }
 
     func resourceLoader(
@@ -51,48 +80,70 @@ final class BetterPlayerEzDrmAssetsLoaderDelegate: NSObject, AVAssetResourceLoad
             return false
         }
 
-        let absoluteString = assetURL.absoluteString
-        let assetId = String(absoluteString.suffix(36))
-
-        let certificate: Data
-        do {
-            certificate = try appCertificate()
-        } catch {
-            loadingRequest.finishLoading(
-                with: NSError(
-                    domain: NSURLErrorDomain,
-                    code: NSURLErrorClientCertificateRejected
+        let requestId = ObjectIdentifier(loadingRequest)
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let self else {
+                return
+            }
+            let absoluteString = assetURL.absoluteString
+            let assetId = String(absoluteString.suffix(36))
+            do {
+                let certificate = try self.appCertificate()
+                let requestBytes = try loadingRequest.streamingContentKeyRequestData(
+                    forApp: certificate,
+                    contentIdentifier: Data(absoluteString.utf8),
+                    options: nil
                 )
-            )
-            return true
-        }
-
-        let requestBytes: Data
-        do {
-            requestBytes = try loadingRequest.streamingContentKeyRequestData(
-                forApp: certificate,
-                contentIdentifier: Data(absoluteString.utf8),
-                options: nil
-            )
-        } catch {
-            loadingRequest.finishLoading(with: nil)
-            return true
-        }
-
-        let customParams = "?customdata=\(assetId)"
-        let responseData = contentKey(
-            requestBytes: requestBytes,
-            assetId: assetId,
-            customParams: customParams
-        )
-
-        if let responseData {
-            loadingRequest.dataRequest?.respond(with: responseData)
-            loadingRequest.finishLoading()
-        } else {
-            loadingRequest.finishLoading(with: nil)
+                let customParams = "?customdata=\(assetId)"
+                self.contentKeyRequest(
+                    requestBytes: requestBytes,
+                    assetId: assetId,
+                    customParams: customParams,
+                    requestId: requestId
+                ) { [weak self] responseData, error in
+                    guard let self else {
+                        return
+                    }
+                    self.callbackQueue.async {
+                        self.tasks.removeValue(forKey: requestId)
+                        let wasCancelled = self.cancelledRequestIds.remove(requestId) != nil
+                        guard !wasCancelled else {
+                            return
+                        }
+                        if let responseData, error == nil {
+                            loadingRequest.dataRequest?.respond(with: responseData)
+                            loadingRequest.finishLoading()
+                        } else {
+                            loadingRequest.finishLoading(with: error)
+                        }
+                    }
+                }
+            } catch {
+                self.callbackQueue.async {
+                    self.tasks.removeValue(forKey: requestId)
+                    let wasCancelled = self.cancelledRequestIds.remove(requestId) != nil
+                    guard !wasCancelled else {
+                        return
+                    }
+                    loadingRequest.finishLoading(with: error)
+                }
+            }
         }
         return true
+    }
+
+    func resourceLoader(
+        _ resourceLoader: AVAssetResourceLoader,
+        didCancel loadingRequest: AVAssetResourceLoadingRequest
+    ) {
+        let requestId = ObjectIdentifier(loadingRequest)
+        callbackQueue.async { [weak self] in
+            guard let self else {
+                return
+            }
+            self.cancelledRequestIds.insert(requestId)
+            self.tasks.removeValue(forKey: requestId)?.cancel()
+        }
     }
 
     func resourceLoader(
